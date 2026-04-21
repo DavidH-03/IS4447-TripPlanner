@@ -17,34 +17,41 @@ export type Trip = {
 type TripContextType = {
   trips: Trip[];
   setTrips: React.Dispatch<React.SetStateAction<Trip[]>>;
+  user: { id: number; name: string; email: string } | null;
+  setUser: React.Dispatch<React.SetStateAction<{ id: number; name: string; email: string } | null>>;
 };
 
 export const TripContext = createContext<TripContextType | null>(null);
 
 export default function RootLayout() {
   const [trips, setTrips] = useState<Trip[]>([]);
+  const [user, setUser] = useState<{ id: number; name: string; email: string } | null>(null);
 
   useEffect(() => {
-    const loadTrips = async () => {
+    const init = async () => {
       try {
         await seedIfEmpty();
         const rows = await db.select().from(tripsTable);
         setTrips(rows);
       } catch (e) {
-        console.log('DB error:', e);
+        console.log('Init error:', e);
       }
     };
-    void loadTrips();
+    void init();
   }, []);
 
   return (
-    <TripContext.Provider value={{ trips, setTrips }}>
+    <TripContext.Provider value={{ trips, setTrips, user, setUser }}>
       <Stack>
         <Stack.Screen name="index" options={{ title: 'My Trips' }} />
+        <Stack.Screen name="login" options={{ headerShown: false }} />
+        <Stack.Screen name="register" options={{ headerShown: false }} />
         <Stack.Screen name="add-trip" options={{ title: 'Add Trip' }} />
         <Stack.Screen name="edit-trip" options={{ title: 'Edit Trip' }} />
         <Stack.Screen name="trip-detail" options={{ title: 'Trip Details' }} />
         <Stack.Screen name="add-activity" options={{ title: 'Add Activity' }} />
+        <Stack.Screen name="edit-activity" options={{ title: 'Edit Activity' }} />
+        <Stack.Screen name="categories" options={{ title: 'Categories' }} />
       </Stack>
     </TripContext.Provider>
   );

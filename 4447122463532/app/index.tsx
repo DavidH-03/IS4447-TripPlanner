@@ -1,14 +1,25 @@
 import { db } from '@/db/client';
 import { trips as tripsTable } from '@/db/schema';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { eq } from 'drizzle-orm';
 import { useRouter } from 'expo-router';
-import { useContext } from 'react';
+import { useContext, useEffect } from 'react';
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { TripContext } from './_layout';
 
 export default function Index() {
   const router = useRouter();
   const context = useContext(TripContext);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const stored = await AsyncStorage.getItem('user');
+      if (!stored) {
+        router.replace('/login');
+      }
+    };
+    void checkAuth();
+  }, []);
 
   if (!context) return null;
   const { trips, setTrips } = context;
@@ -22,6 +33,9 @@ export default function Index() {
   return (
     <View style={styles.container}>
       <Text style={styles.header}>My Trips</Text>
+      <TouchableOpacity onPress={() => router.push('/categories')}>
+        <Text style={styles.categoriesLink}>Manage Categories</Text>
+      </TouchableOpacity>
       {trips.length === 0 ? (
         <Text style={styles.empty}>No trips yet. Add your first trip!</Text>
       ) : (
@@ -29,24 +43,24 @@ export default function Index() {
           data={trips}
           keyExtractor={(item) => item.id.toString()}
           renderItem={({ item }) => (
-  <TouchableOpacity onPress={() => router.push(`/trip-detail?id=${item.id}`)}>
-    <View style={styles.card}>
-      <View style={styles.cardContent}>
-        <Text style={styles.tripName}>{item.name}</Text>
-        <Text style={styles.tripDestination}>{item.destination}</Text>
-        <Text style={styles.tripDates}>{item.startDate} → {item.endDate}</Text>
-      </View>
-      <View style={styles.cardActions}>
-        <TouchableOpacity onPress={() => router.push(`/edit-trip?id=${item.id}`)}>
-          <Text style={styles.editText}>Edit</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => handleDelete(item.id)}>
-          <Text style={styles.deleteText}>Delete</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  </TouchableOpacity>
-)}
+            <TouchableOpacity onPress={() => router.push(`/trip-detail?id=${item.id}`)}>
+              <View style={styles.card}>
+                <View style={styles.cardContent}>
+                  <Text style={styles.tripName}>{item.name}</Text>
+                  <Text style={styles.tripDestination}>{item.destination}</Text>
+                  <Text style={styles.tripDates}>{item.startDate} → {item.endDate}</Text>
+                </View>
+                <View style={styles.cardActions}>
+                  <TouchableOpacity onPress={() => router.push(`/edit-trip?id=${item.id}`)}>
+                    <Text style={styles.editText}>Edit</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => handleDelete(item.id)}>
+                    <Text style={styles.deleteText}>Delete</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </TouchableOpacity>
+          )}
         />
       )}
       <TouchableOpacity style={styles.addButton} onPress={() => router.push('/add-trip')}>
@@ -67,7 +81,12 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: '600',
     color: '#000',
-    marginBottom: 20,
+    marginBottom: 4,
+  },
+  categoriesLink: {
+    color: '#666',
+    fontSize: 14,
+    marginBottom: 16,
   },
   empty: {
     color: '#999',
