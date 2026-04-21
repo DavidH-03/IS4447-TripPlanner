@@ -36,6 +36,15 @@ export default function Index() {
       <TouchableOpacity onPress={() => router.push('/categories')}>
         <Text style={styles.categoriesLink}>Manage Categories</Text>
       </TouchableOpacity>
+      <TouchableOpacity onPress={() => router.push('/settings')}>
+  <Text style={styles.categoriesLink}>Settings</Text>
+</TouchableOpacity> 
+<TouchableOpacity onPress={() => router.push('/targets')}>
+  <Text style={styles.categoriesLink}>Targets</Text>
+</TouchableOpacity>
+<TouchableOpacity onPress={() => router.push('/insights')}>
+  <Text style={styles.categoriesLink}>Insights</Text>
+</TouchableOpacity>
       {trips.length === 0 ? (
         <Text style={styles.empty}>No trips yet. Add your first trip!</Text>
       ) : (

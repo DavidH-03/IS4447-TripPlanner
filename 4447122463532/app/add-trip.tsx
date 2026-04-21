@@ -1,6 +1,7 @@
 import FormField from '@/components/ui/form-field';
 import { db } from '@/db/client';
 import { trips as tripsTable } from '@/db/schema';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import { useContext, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity } from 'react-native';
@@ -8,30 +9,33 @@ import { TripContext } from './_layout';
 
 export default function AddTrip() {
   const router = useRouter();
-    const context = useContext(TripContext); 
+  const context = useContext(TripContext);
   const [name, setName] = useState('');
   const [destination, setDestination] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [notes, setNotes] = useState('');
 
-const handleSave = async () => {
-  if (!name || !destination || !startDate || !endDate) {
-    alert('Please fill in all required fields');
-    return;
-  }
-  await db.insert(tripsTable).values({
-    name,
-    destination,
-    startDate,
-    endDate,
-    notes: notes || null,
-    createdAt: new Date().toISOString(),
-  });
-  const rows = await db.select().from(tripsTable);
-  if (context) context.setTrips(rows);
-  router.back();
-};
+  const handleSave = async () => {
+    if (!name || !destination || !startDate || !endDate) {
+      alert('Please fill in all required fields');
+      return;
+    }
+    const stored = await AsyncStorage.getItem('user');
+    const user = JSON.parse(stored!);
+    await db.insert(tripsTable).values({
+      name,
+      destination,
+      startDate,
+      endDate,
+      notes: notes || null,
+      userId: user.id,
+      createdAt: new Date().toISOString(),
+    });
+    const rows = await db.select().from(tripsTable);
+    if (context) context.setTrips(rows);
+    router.back();
+  };
 
   return (
     <ScrollView style={styles.container}>
