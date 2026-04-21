@@ -1,9 +1,9 @@
 import { db } from '@/db/client';
-import { activities as activitiesTable, trips as tripsTable } from '@/db/schema';
+import { activities as activitiesTable, categories as categoriesTable, trips as tripsTable } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 type Activity = {
   id: number;
@@ -23,11 +23,23 @@ type Trip = {
   notes: string | null;
 };
 
+type Category = {
+  id: number;
+  name: string;
+  icon: string;
+};
+
 export default function TripDetail() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const [trip, setTrip] = useState<Trip | null>(null);
   const [activities, setActivities] = useState<Activity[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [search, setSearch] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -35,6 +47,8 @@ export default function TripDetail() {
       if (tripRows.length > 0) setTrip(tripRows[0]);
       const activityRows = await db.select().from(activitiesTable).where(eq(activitiesTable.tripId, Number(id)));
       setActivities(activityRows);
+      const catRows = await db.select().from(categoriesTable);
+      setCategories(catRows);
     };
     void load();
   }, [id]);
@@ -44,6 +58,14 @@ export default function TripDetail() {
     const rows = await db.select().from(activitiesTable).where(eq(activitiesTable.tripId, Number(id)));
     setActivities(rows);
   };
+
+  const filteredActivities = activities.filter(a => {
+    const matchesSearch = search === '' || a.name.toLowerCase().includes(search.toLowerCase()) || (a.notes && a.notes.toLowerCase().includes(search.toLowerCase()));
+    const matchesCategory = selectedCategory === null || a.categoryId === selectedCategory;
+    const matchesFrom = fromDate === '' || a.date >= fromDate;
+    const matchesTo = toDate === '' || a.date <= toDate;
+    return matchesSearch && matchesCategory && matchesFrom && matchesTo;
+  });
 
   if (!trip) return <View style={styles.container}><Text>Loading...</Text></View>;
 
@@ -56,11 +78,58 @@ export default function TripDetail() {
 
       <Text style={styles.sectionHeader}>Activities</Text>
 
-      {activities.length === 0 ? (
-        <Text style={styles.empty}>No activities yet. Add your first one!</Text>
+      <TextInput
+        style={styles.searchInput}
+        placeholder="Search activities..."
+        value={search}
+        onChangeText={setSearch}
+      />
+
+      <TouchableOpacity onPress={() => setShowFilters(!showFilters)}>
+        <Text style={styles.filterToggle}>{showFilters ? 'Hide Filters ▲' : 'Show Filters ▼'}</Text>
+      </TouchableOpacity>
+
+      {showFilters && (
+        <View style={styles.filterBox}>
+          <View style={styles.dateRow}>
+            <TextInput
+              style={[styles.dateInput]}
+              placeholder="From (YYYY-MM-DD)"
+              value={fromDate}
+              onChangeText={setFromDate}
+            />
+            <TextInput
+              style={[styles.dateInput]}
+              placeholder="To (YYYY-MM-DD)"
+              value={toDate}
+              onChangeText={setToDate}
+            />
+          </View>
+          <View style={styles.categoryRow}>
+            <TouchableOpacity
+              style={[styles.catChip, selectedCategory === null && styles.catChipSelected]}
+              onPress={() => setSelectedCategory(null)}
+            >
+              <Text style={[styles.catChipText, selectedCategory === null && styles.catChipTextSelected]}>All</Text>
+            </TouchableOpacity>
+            {categories.map(c => (
+              <TouchableOpacity
+                key={c.id}
+                style={[styles.catChip, selectedCategory === c.id && styles.catChipSelected]}
+                onPress={() => setSelectedCategory(c.id)}
+              >
+                <Text style={[styles.catChipText, selectedCategory === c.id && styles.catChipTextSelected]}>{c.icon} {c.name}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      )}
+
+      {filteredActivities.length === 0 ? (
+        <Text style={styles.empty}>No activities found.</Text>
       ) : (
         <FlatList
-          data={activities}
+          data={filteredActivities}
           keyExtractor={(item) => item.id.toString()}
           renderItem={({ item }) => (
             <View style={styles.activityCard}>
@@ -96,6 +165,16 @@ const styles = StyleSheet.create({
   dates: { fontSize: 13, color: '#999', marginTop: 4 },
   notes: { fontSize: 13, color: '#666', marginTop: 8 },
   sectionHeader: { fontSize: 18, fontWeight: '600', color: '#000', marginTop: 24, marginBottom: 8 },
+  searchInput: { borderWidth: 1, borderColor: '#ddd', borderRadius: 8, padding: 10, fontSize: 14, marginBottom: 8 },
+  filterToggle: { color: '#666', fontSize: 13, marginBottom: 8 },
+  filterBox: { marginBottom: 12 },
+  dateRow: { flexDirection: 'row', gap: 8, marginBottom: 8 },
+  dateInput: { flex: 1, borderWidth: 1, borderColor: '#ddd', borderRadius: 8, padding: 8, fontSize: 12 },
+  categoryRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  catChip: { borderWidth: 1, borderColor: '#ddd', borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4 },
+  catChipSelected: { backgroundColor: '#000', borderColor: '#000' },
+  catChipText: { fontSize: 12, color: '#000' },
+  catChipTextSelected: { color: '#fff' },
   empty: { color: '#999', fontSize: 14, marginTop: 8 },
   activityCard: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderBottomWidth: 1, borderBottomColor: '#eee', paddingVertical: 12 },
   activityContent: { flex: 1 },
