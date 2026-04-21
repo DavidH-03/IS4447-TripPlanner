@@ -1,3 +1,4 @@
+import { useTheme } from '@/context/theme-context';
 import { db } from '@/db/client';
 import { trips as tripsTable } from '@/db/schema';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -10,6 +11,7 @@ import { TripContext } from './_layout';
 export default function Index() {
   const router = useRouter();
   const context = useContext(TripContext);
+  const { colors } = useTheme();
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -31,8 +33,8 @@ export default function Index() {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.header}>My Trips</Text>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <Text style={[styles.header, { color: colors.text }]}>My Trips</Text>
       <TouchableOpacity onPress={() => router.push('/categories')}>
         <Text style={styles.categoriesLink}>Manage Categories</Text>
       </TouchableOpacity>
@@ -53,15 +55,15 @@ export default function Index() {
           keyExtractor={(item) => item.id.toString()}
           renderItem={({ item }) => (
             <TouchableOpacity onPress={() => router.push(`/trip-detail?id=${item.id}`)}>
-              <View style={styles.card}>
+              <View style={[styles.card, { borderBottomColor: colors.border }]}>
                 <View style={styles.cardContent}>
-                  <Text style={styles.tripName}>{item.name}</Text>
-                  <Text style={styles.tripDestination}>{item.destination}</Text>
+                  <Text style={[styles.tripName, { color: colors.text }]}>{item.name}</Text>
+                  <Text style={[styles.tripDestination, { color: colors.subtext }]}>{item.destination}</Text>
                   <Text style={styles.tripDates}>{item.startDate} → {item.endDate}</Text>
                 </View>
                 <View style={styles.cardActions}>
                   <TouchableOpacity onPress={() => router.push(`/edit-trip?id=${item.id}`)}>
-                    <Text style={styles.editText}>Edit</Text>
+                    <Text style={[styles.editText, { color: colors.text }]}>Edit</Text>
                   </TouchableOpacity>
                   <TouchableOpacity onPress={() => handleDelete(item.id)}>
                     <Text style={styles.deleteText}>Delete</Text>
@@ -72,8 +74,8 @@ export default function Index() {
           )}
         />
       )}
-      <TouchableOpacity style={styles.addButton} onPress={() => router.push('/add-trip')}>
-        <Text style={styles.addButtonText}>+ Add Trip</Text>
+      <TouchableOpacity style={[styles.addButton, { backgroundColor: colors.primary }]} onPress={() => router.push('/add-trip')}>
+        <Text style={[styles.addButtonText, { color: colors.background }]}>+ Add Trip</Text>
       </TouchableOpacity>
     </View>
   );

@@ -1,3 +1,4 @@
+import { useTheme } from '@/context/theme-context';
 import { StyleSheet, Text, TextInput, View } from 'react-native';
 
 type Props = {
@@ -17,14 +18,17 @@ export default function FormField({
   secureTextEntry = false,
   multiline = false,
 }: Props) {
+  const { colors } = useTheme();
+
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>{label}</Text>
+      <Text style={[styles.label, { color: colors.text }]}>{label}</Text>
       <TextInput
-        style={[styles.input, multiline && styles.multiline]}
+        style={[styles.input, multiline && styles.multiline, { borderColor: colors.border, color: colors.text, backgroundColor: colors.card }]}
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder}
+        placeholderTextColor={colors.subtext}
         secureTextEntry={secureTextEntry}
         multiline={multiline}
         accessibilityLabel={label}

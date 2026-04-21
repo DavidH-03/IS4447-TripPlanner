@@ -1,4 +1,5 @@
 import FormField from '@/components/ui/form-field';
+import { useTheme } from '@/context/theme-context';
 import { db } from '@/db/client';
 import { categories as categoriesTable } from '@/db/schema';
 import { eq } from 'drizzle-orm';
@@ -16,6 +17,7 @@ const COLOURS = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD
 const ICONS = ['🏛️', '🍽️', '🥾', '🚂', '🏨', '🎭', '🛍️', '🏖️', '⛺', '🎵'];
 
 export default function Categories() {
+  const { colors } = useTheme();
   const [categories, setCategories] = useState<Category[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -68,25 +70,25 @@ export default function Categories() {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.header}>Categories</Text>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <Text style={[styles.header, { color: colors.text }]}>Categories</Text>
 
       {categories.length === 0 ? (
-        <Text style={styles.empty}>No categories yet. Add your first one!</Text>
+        <Text style={[styles.empty, { color: colors.subtext }]}>No categories yet. Add your first one!</Text>
       ) : (
         <FlatList
           data={categories}
           keyExtractor={(item) => item.id.toString()}
           renderItem={({ item }) => (
-            <View style={styles.card}>
+            <View style={[styles.card, { borderBottomColor: colors.border }]}>
               <View style={styles.cardLeft}>
                 <View style={[styles.colourDot, { backgroundColor: item.colour }]} />
                 <Text style={styles.icon}>{item.icon}</Text>
-                <Text style={styles.name}>{item.name}</Text>
+                <Text style={[styles.name, { color: colors.text }]}>{item.name}</Text>
               </View>
               <View style={styles.actions}>
                 <TouchableOpacity onPress={() => openEdit(item)}>
-                  <Text style={styles.editText}>Edit</Text>
+                  <Text style={[styles.editText, { color: colors.text }]}>Edit</Text>
                 </TouchableOpacity>
                 <TouchableOpacity onPress={() => handleDelete(item.id)}>
                   <Text style={styles.deleteText}>Delete</Text>
@@ -97,36 +99,36 @@ export default function Categories() {
         />
       )}
 
-      <TouchableOpacity style={styles.addButton} onPress={openAdd}>
-        <Text style={styles.addButtonText}>+ Add Category</Text>
+      <TouchableOpacity style={[styles.addButton, { backgroundColor: colors.primary }]} onPress={openAdd}>
+        <Text style={[styles.addButtonText, { color: colors.background }]}>+ Add Category</Text>
       </TouchableOpacity>
 
       <Modal visible={modalVisible} animationType="slide" presentationStyle="pageSheet">
-        <ScrollView style={styles.modal}>
-          <Text style={styles.modalTitle}>{editingId ? 'Edit Category' : 'Add Category'}</Text>
+        <ScrollView style={[styles.modal, { backgroundColor: colors.background }]}>
+          <Text style={[styles.modalTitle, { color: colors.text }]}>{editingId ? 'Edit Category' : 'Add Category'}</Text>
           <FormField label="Name" value={name} onChangeText={setName} placeholder="e.g. Sightseeing" />
 
-          <Text style={styles.label}>Colour</Text>
+          <Text style={[styles.label, { color: colors.text }]}>Colour</Text>
           <View style={styles.colourRow}>
             {COLOURS.map((c) => (
               <TouchableOpacity key={c} style={[styles.colourOption, { backgroundColor: c }, colour === c && styles.colourSelected]} onPress={() => setColour(c)} />
             ))}
           </View>
 
-          <Text style={styles.label}>Icon</Text>
+          <Text style={[styles.label, { color: colors.text }]}>Icon</Text>
           <View style={styles.iconRow}>
             {ICONS.map((i) => (
-              <TouchableOpacity key={i} style={[styles.iconOption, icon === i && styles.iconSelected]} onPress={() => setIcon(i)}>
+              <TouchableOpacity key={i} style={[styles.iconOption, { borderColor: colors.border }, icon === i && { borderColor: colors.text, backgroundColor: colors.card }]} onPress={() => setIcon(i)}>
                 <Text style={styles.iconText}>{i}</Text>
               </TouchableOpacity>
             ))}
           </View>
 
-          <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-            <Text style={styles.saveButtonText}>Save</Text>
+          <TouchableOpacity style={[styles.saveButton, { backgroundColor: colors.primary }]} onPress={handleSave}>
+            <Text style={[styles.saveButtonText, { color: colors.background }]}>Save</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.cancelButton} onPress={() => setModalVisible(false)}>
-            <Text style={styles.cancelButtonText}>Cancel</Text>
+            <Text style={[styles.cancelButtonText, { color: colors.subtext }]}>Cancel</Text>
           </TouchableOpacity>
         </ScrollView>
       </Modal>

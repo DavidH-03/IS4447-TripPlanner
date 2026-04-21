@@ -1,3 +1,4 @@
+import { useTheme } from '@/context/theme-context';
 import { db } from '@/db/client';
 import { activities as activitiesTable, categories as categoriesTable, trips as tripsTable } from '@/db/schema';
 import { eq } from 'drizzle-orm';
@@ -40,6 +41,7 @@ export default function TripDetail() {
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
   const [showFilters, setShowFilters] = useState(false);
+  const { colors } = useTheme();
 
   useEffect(() => {
     const load = async () => {
@@ -67,58 +69,61 @@ export default function TripDetail() {
     return matchesSearch && matchesCategory && matchesFrom && matchesTo;
   });
 
-  if (!trip) return <View style={styles.container}><Text>Loading...</Text></View>;
+  if (!trip) return <View style={[styles.container, { backgroundColor: colors.background }]}><Text style={{ color: colors.text }}>Loading...</Text></View>;
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.tripName}>{trip.name}</Text>
-      <Text style={styles.destination}>{trip.destination}</Text>
-      <Text style={styles.dates}>{trip.startDate} → {trip.endDate}</Text>
-      {trip.notes ? <Text style={styles.notes}>{trip.notes}</Text> : null}
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <Text style={[styles.tripName, { color: colors.text }]}>{trip.name}</Text>
+      <Text style={[styles.destination, { color: colors.subtext }]}>{trip.destination}</Text>
+      <Text style={[styles.dates, { color: colors.subtext }]}>{trip.startDate} → {trip.endDate}</Text>
+      {trip.notes ? <Text style={[styles.notes, { color: colors.subtext }]}>{trip.notes}</Text> : null}
 
-      <Text style={styles.sectionHeader}>Activities</Text>
+      <Text style={[styles.sectionHeader, { color: colors.text }]}>Activities</Text>
 
       <TextInput
-        style={styles.searchInput}
+        style={[styles.searchInput, { borderColor: colors.border, color: colors.text, backgroundColor: colors.card }]}
         placeholder="Search activities..."
+        placeholderTextColor={colors.subtext}
         value={search}
         onChangeText={setSearch}
       />
 
       <TouchableOpacity onPress={() => setShowFilters(!showFilters)}>
-        <Text style={styles.filterToggle}>{showFilters ? 'Hide Filters ▲' : 'Show Filters ▼'}</Text>
+        <Text style={[styles.filterToggle, { color: colors.subtext }]}>{showFilters ? 'Hide Filters ▲' : 'Show Filters ▼'}</Text>
       </TouchableOpacity>
 
       {showFilters && (
         <View style={styles.filterBox}>
           <View style={styles.dateRow}>
             <TextInput
-              style={[styles.dateInput]}
+              style={[styles.dateInput, { borderColor: colors.border, color: colors.text, backgroundColor: colors.card }]}
               placeholder="From (YYYY-MM-DD)"
+              placeholderTextColor={colors.subtext}
               value={fromDate}
               onChangeText={setFromDate}
             />
             <TextInput
-              style={[styles.dateInput]}
+              style={[styles.dateInput, { borderColor: colors.border, color: colors.text, backgroundColor: colors.card }]}
               placeholder="To (YYYY-MM-DD)"
+              placeholderTextColor={colors.subtext}
               value={toDate}
               onChangeText={setToDate}
             />
           </View>
           <View style={styles.categoryRow}>
             <TouchableOpacity
-              style={[styles.catChip, selectedCategory === null && styles.catChipSelected]}
+              style={[styles.catChip, { borderColor: colors.border }, selectedCategory === null && styles.catChipSelected]}
               onPress={() => setSelectedCategory(null)}
             >
-              <Text style={[styles.catChipText, selectedCategory === null && styles.catChipTextSelected]}>All</Text>
+              <Text style={[styles.catChipText, { color: colors.text }, selectedCategory === null && styles.catChipTextSelected]}>All</Text>
             </TouchableOpacity>
             {categories.map(c => (
               <TouchableOpacity
                 key={c.id}
-                style={[styles.catChip, selectedCategory === c.id && styles.catChipSelected]}
+                style={[styles.catChip, { borderColor: colors.border }, selectedCategory === c.id && styles.catChipSelected]}
                 onPress={() => setSelectedCategory(c.id)}
               >
-                <Text style={[styles.catChipText, selectedCategory === c.id && styles.catChipTextSelected]}>{c.icon} {c.name}</Text>
+                <Text style={[styles.catChipText, { color: colors.text }, selectedCategory === c.id && styles.catChipTextSelected]}>{c.icon} {c.name}</Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -126,21 +131,21 @@ export default function TripDetail() {
       )}
 
       {filteredActivities.length === 0 ? (
-        <Text style={styles.empty}>No activities found.</Text>
+        <Text style={[styles.empty, { color: colors.subtext }]}>No activities found.</Text>
       ) : (
         <FlatList
           data={filteredActivities}
           keyExtractor={(item) => item.id.toString()}
           renderItem={({ item }) => (
-            <View style={styles.activityCard}>
+            <View style={[styles.activityCard, { borderBottomColor: colors.border }]}>
               <View style={styles.activityContent}>
-                <Text style={styles.activityName}>{item.name}</Text>
-                <Text style={styles.activityMeta}>{item.date} · {item.duration}h</Text>
-                {item.notes ? <Text style={styles.activityNotes}>{item.notes}</Text> : null}
+                <Text style={[styles.activityName, { color: colors.text }]}>{item.name}</Text>
+                <Text style={[styles.activityMeta, { color: colors.subtext }]}>{item.date} · {item.duration}h</Text>
+                {item.notes ? <Text style={[styles.activityNotes, { color: colors.subtext }]}>{item.notes}</Text> : null}
               </View>
               <View style={styles.activityActions}>
                 <TouchableOpacity onPress={() => router.push(`/edit-activity?id=${item.id}&tripId=${id}`)}>
-                  <Text style={styles.editText}>Edit</Text>
+                  <Text style={[styles.editText, { color: colors.text }]}>Edit</Text>
                 </TouchableOpacity>
                 <TouchableOpacity onPress={() => handleDeleteActivity(item.id)}>
                   <Text style={styles.deleteText}>Delete</Text>
@@ -151,8 +156,8 @@ export default function TripDetail() {
         />
       )}
 
-      <TouchableOpacity style={styles.addButton} onPress={() => router.push(`/add-activity?tripId=${id}`)}>
-        <Text style={styles.addButtonText}>+ Add Activity</Text>
+      <TouchableOpacity style={[styles.addButton, { backgroundColor: colors.primary }]} onPress={() => router.push(`/add-activity?tripId=${id}`)}>
+        <Text style={[styles.addButtonText, { color: colors.background }]}>+ Add Activity</Text>
       </TouchableOpacity>
     </View>
   );

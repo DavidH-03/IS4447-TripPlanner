@@ -1,4 +1,5 @@
 import FormField from '@/components/ui/form-field';
+import { useTheme } from '@/context/theme-context';
 import { db } from '@/db/client';
 import { users } from '@/db/schema';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -9,6 +10,7 @@ import { ScrollView, StyleSheet, Text, TouchableOpacity } from 'react-native';
 
 export default function Register() {
   const router = useRouter();
+  const { colors } = useTheme();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -35,20 +37,20 @@ export default function Register() {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.title}>Create Account</Text>
-      <Text style={styles.subtitle}>Start tracking your trips</Text>
+    <ScrollView style={[styles.container, { backgroundColor: colors.background }]} contentContainerStyle={styles.content}>
+      <Text style={[styles.title, { color: colors.text }]}>Create Account</Text>
+      <Text style={[styles.subtitle, { color: colors.subtext }]}>Start tracking your trips</Text>
 
       <FormField label="Name" value={name} onChangeText={setName} placeholder="Your name" />
       <FormField label="Email" value={email} onChangeText={setEmail} placeholder="your@email.com" />
       <FormField label="Password" value={password} onChangeText={setPassword} placeholder="Choose a password" secureTextEntry />
 
-      <TouchableOpacity style={styles.button} onPress={handleRegister}>
-        <Text style={styles.buttonText}>Register</Text>
+      <TouchableOpacity style={[styles.button, { backgroundColor: colors.primary }]} onPress={handleRegister}>
+        <Text style={[styles.buttonText, { color: colors.background }]}>Register</Text>
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.link} onPress={() => router.back()}>
-        <Text style={styles.linkText}>Already have an account? Login</Text>
+        <Text style={[styles.linkText, { color: colors.subtext }]}>Already have an account? Login</Text>
       </TouchableOpacity>
     </ScrollView>
   );

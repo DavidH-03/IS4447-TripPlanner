@@ -1,4 +1,5 @@
 import FormField from '@/components/ui/form-field';
+import { useTheme } from '@/context/theme-context';
 import { db } from '@/db/client';
 import { users } from '@/db/schema';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -9,6 +10,7 @@ import { ScrollView, StyleSheet, Text, TouchableOpacity } from 'react-native';
 
 export default function Login() {
   const router = useRouter();
+  const { colors } = useTheme();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
@@ -28,19 +30,19 @@ export default function Login() {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.title}>TripTracker</Text>
-      <Text style={styles.subtitle}>Sign in to continue</Text>
+    <ScrollView style={[styles.container, { backgroundColor: colors.background }]} contentContainerStyle={styles.content}>
+      <Text style={[styles.title, { color: colors.text }]}>TripTracker</Text>
+      <Text style={[styles.subtitle, { color: colors.subtext }]}>Sign in to continue</Text>
 
       <FormField label="Email" value={email} onChangeText={setEmail} placeholder="your@email.com" />
       <FormField label="Password" value={password} onChangeText={setPassword} placeholder="Your password" secureTextEntry />
 
-      <TouchableOpacity style={styles.button} onPress={handleLogin}>
-        <Text style={styles.buttonText}>Login</Text>
+      <TouchableOpacity style={[styles.button, { backgroundColor: colors.primary }]} onPress={handleLogin}>
+        <Text style={[styles.buttonText, { color: colors.background }]}>Login</Text>
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.link} onPress={() => router.push('/register')}>
-        <Text style={styles.linkText}>Don't have an account? Register</Text>
+        <Text style={[styles.linkText, { color: colors.subtext }]}>Don't have an account? Register</Text>
       </TouchableOpacity>
     </ScrollView>
   );

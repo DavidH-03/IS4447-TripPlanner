@@ -1,4 +1,5 @@
 import FormField from '@/components/ui/form-field';
+import { useTheme } from '@/context/theme-context';
 import { db } from '@/db/client';
 import { activities as activitiesTable, categories as categoriesTable } from '@/db/schema';
 import { eq } from 'drizzle-orm';
@@ -16,6 +17,7 @@ type Category = {
 export default function EditActivity() {
   const router = useRouter();
   const { id, tripId } = useLocalSearchParams();
+  const { colors } = useTheme();
   const [name, setName] = useState('');
   const [date, setDate] = useState('');
   const [duration, setDuration] = useState('');
@@ -56,20 +58,20 @@ export default function EditActivity() {
   };
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
       <FormField label="Activity Name" value={name} onChangeText={setName} placeholder="e.g. Eiffel Tower visit" />
       <FormField label="Date" value={date} onChangeText={setDate} placeholder="YYYY-MM-DD" />
       <FormField label="Duration (hours)" value={duration} onChangeText={setDuration} placeholder="e.g. 2.5" />
 
-      <Text style={styles.label}>Category</Text>
+      <Text style={[styles.label, { color: colors.text }]}>Category</Text>
       <View style={styles.categoryList}>
         {categories.map((cat) => (
           <TouchableOpacity
             key={cat.id}
-            style={[styles.categoryChip, selectedCategory === cat.id && styles.categoryChipSelected]}
+            style={[styles.categoryChip, { borderColor: colors.border }, selectedCategory === cat.id && styles.categoryChipSelected]}
             onPress={() => setSelectedCategory(cat.id)}
           >
-            <Text style={[styles.categoryChipText, selectedCategory === cat.id && styles.categoryChipTextSelected]}>
+            <Text style={[styles.categoryChipText, { color: colors.text }, selectedCategory === cat.id && styles.categoryChipTextSelected]}>
               {cat.icon} {cat.name}
             </Text>
           </TouchableOpacity>
@@ -78,12 +80,12 @@ export default function EditActivity() {
 
       <FormField label="Notes (optional)" value={notes} onChangeText={setNotes} placeholder="Any notes..." multiline />
 
-      <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-        <Text style={styles.saveButtonText}>Save Changes</Text>
+      <TouchableOpacity style={[styles.saveButton, { backgroundColor: colors.primary }]} onPress={handleSave}>
+        <Text style={[styles.saveButtonText, { color: colors.background }]}>Save Changes</Text>
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.cancelButton} onPress={() => router.back()}>
-        <Text style={styles.cancelButtonText}>Cancel</Text>
+        <Text style={[styles.cancelButtonText, { color: colors.subtext }]}>Cancel</Text>
       </TouchableOpacity>
     </ScrollView>
   );

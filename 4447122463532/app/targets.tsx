@@ -1,4 +1,5 @@
 import FormField from '@/components/ui/form-field';
+import { useTheme } from '@/context/theme-context';
 import { db } from '@/db/client';
 import { activities as activitiesTable, categories as categoriesTable, targets as targetsTable } from '@/db/schema';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -23,6 +24,7 @@ type Category = {
 };
 
 export default function Targets() {
+  const { colors } = useTheme();
   const [targets, setTargets] = useState<Target[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
@@ -53,10 +55,8 @@ export default function Targets() {
     const startOfWeek = new Date(now);
     startOfWeek.setDate(now.getDate() - now.getDay());
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-
     const allActivities = await db.select().from(activitiesTable);
     const progressMap: Record<number, number> = {};
-
     for (const target of targets) {
       const start = target.period === 'weekly' ? startOfWeek : startOfMonth;
       const filtered = allActivities.filter(a => {
@@ -84,6 +84,16 @@ export default function Targets() {
     setModalVisible(true);
   };
 
+  const openEdit = (target: Target) => {
+    setEditingId(target.id);
+    setName(target.name);
+    setType(target.type);
+    setPeriod(target.period);
+    setTargetValue(target.targetValue.toString());
+    setSelectedCategory(target.categoryId);
+    setModalVisible(true);
+  };
+
   const handleSave = async () => {
     if (!name || !targetValue) {
       alert('Please fill in all fields');
@@ -91,7 +101,6 @@ export default function Targets() {
     }
     const stored = await AsyncStorage.getItem('user');
     const user = JSON.parse(stored!);
-
     if (editingId) {
       await db.update(targetsTable).set({
         name, type, period,
@@ -122,11 +131,10 @@ export default function Targets() {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.header}>Targets</Text>
-
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <Text style={[styles.header, { color: colors.text }]}>Targets</Text>
       {targets.length === 0 ? (
-        <Text style={styles.empty}>No targets yet. Add your first one!</Text>
+        <Text style={[styles.empty, { color: colors.subtext }]}>No targets yet. Add your first one!</Text>
       ) : (
         <FlatList
           data={targets}
@@ -136,74 +144,74 @@ export default function Targets() {
             const percentage = Math.min((current / item.targetValue) * 100, 100);
             const exceeded = current >= item.targetValue;
             return (
-              <View style={styles.card}>
+              <View style={[styles.card, { borderBottomColor: colors.border }]}>
                 <View style={styles.cardHeader}>
-                  <Text style={styles.targetName}>{item.name}</Text>
-                  <TouchableOpacity onPress={() => handleDelete(item.id)}>
-                    <Text style={styles.deleteText}>Delete</Text>
-                  </TouchableOpacity>
+                  <Text style={[styles.targetName, { color: colors.text }]}>{item.name}</Text>
+                  <View style={styles.cardActions}>
+                    <TouchableOpacity onPress={() => openEdit(item)}>
+                      <Text style={[styles.editText, { color: colors.text }]}>Edit</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => handleDelete(item.id)}>
+                      <Text style={styles.deleteText}>Delete</Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
-                <Text style={styles.targetMeta}>
+                <Text style={[styles.targetMeta, { color: colors.subtext }]}>
                   {item.period} · {getCategoryName(item.categoryId)}
                 </Text>
-                <View style={styles.progressBar}>
-                  <View style={[styles.progressFill, { width: `${percentage}%` as any, backgroundColor: exceeded ? '#34c759' : '#000' }]} />
+                <View style={[styles.progressBar, { backgroundColor: colors.border }]}>
+                  <View style={[styles.progressFill, { width: `${percentage}%` as any, backgroundColor: exceeded ? '#34c759' : colors.primary }]} />
                 </View>
-                <Text style={[styles.progressText, exceeded && styles.exceeded]}>
+                <Text style={[styles.progressText, { color: colors.subtext }, exceeded && styles.exceeded]}>
                   {current} / {item.targetValue} {item.type === 'duration' ? 'hours' : 'activities'}
-                  {exceeded ? ' ✓ Target met!' : ` (${(item.targetValue - current).toFixed(1)} remaining)`}
+                  {exceeded ? ' Target met!' : ` (${(item.targetValue - current).toFixed(1)} remaining)`}
                 </Text>
               </View>
             );
           }}
         />
       )}
-
-      <TouchableOpacity style={styles.addButton} onPress={openAdd}>
-        <Text style={styles.addButtonText}>+ Add Target</Text>
+      <TouchableOpacity style={[styles.addButton, { backgroundColor: colors.primary }]} onPress={openAdd}>
+        <Text style={[styles.addButtonText, { color: colors.background }]}>+ Add Target</Text>
       </TouchableOpacity>
 
       <Modal visible={modalVisible} animationType="slide" presentationStyle="pageSheet">
-        <ScrollView style={styles.modal}>
-          <Text style={styles.modalTitle}>Add Target</Text>
+        <ScrollView style={[styles.modal, { backgroundColor: colors.background }]}>
+          <Text style={[styles.modalTitle, { color: colors.text }]}>{editingId ? 'Edit Target' : 'Add Target'}</Text>
           <FormField label="Target Name" value={name} onChangeText={setName} placeholder="e.g. Activities per week" />
           <FormField label="Target Value" value={targetValue} onChangeText={setTargetValue} placeholder="e.g. 5" />
-
-          <Text style={styles.label}>Type</Text>
+          <Text style={[styles.label, { color: colors.text }]}>Type</Text>
           <View style={styles.row}>
             {['count', 'duration'].map(t => (
-              <TouchableOpacity key={t} style={[styles.chip, type === t && styles.chipSelected]} onPress={() => setType(t)}>
-                <Text style={[styles.chipText, type === t && styles.chipTextSelected]}>{t === 'count' ? 'Count' : 'Duration (hrs)'}</Text>
+              <TouchableOpacity key={t} style={[styles.chip, { borderColor: colors.border }, type === t && styles.chipSelected]} onPress={() => setType(t)}>
+                <Text style={[styles.chipText, { color: colors.text }, type === t && styles.chipTextSelected]}>{t === 'count' ? 'Count' : 'Duration (hrs)'}</Text>
               </TouchableOpacity>
             ))}
           </View>
-
-          <Text style={styles.label}>Period</Text>
+          <Text style={[styles.label, { color: colors.text }]}>Period</Text>
           <View style={styles.row}>
             {['weekly', 'monthly'].map(p => (
-              <TouchableOpacity key={p} style={[styles.chip, period === p && styles.chipSelected]} onPress={() => setPeriod(p)}>
-                <Text style={[styles.chipText, period === p && styles.chipTextSelected]}>{p === 'weekly' ? 'Weekly' : 'Monthly'}</Text>
+              <TouchableOpacity key={p} style={[styles.chip, { borderColor: colors.border }, period === p && styles.chipSelected]} onPress={() => setPeriod(p)}>
+                <Text style={[styles.chipText, { color: colors.text }, period === p && styles.chipTextSelected]}>{p === 'weekly' ? 'Weekly' : 'Monthly'}</Text>
               </TouchableOpacity>
             ))}
           </View>
-
-          <Text style={styles.label}>Category (optional)</Text>
+          <Text style={[styles.label, { color: colors.text }]}>Category (optional)</Text>
           <View style={styles.row}>
-            <TouchableOpacity style={[styles.chip, selectedCategory === null && styles.chipSelected]} onPress={() => setSelectedCategory(null)}>
-              <Text style={[styles.chipText, selectedCategory === null && styles.chipTextSelected]}>All</Text>
+            <TouchableOpacity style={[styles.chip, { borderColor: colors.border }, selectedCategory === null && styles.chipSelected]} onPress={() => setSelectedCategory(null)}>
+              <Text style={[styles.chipText, { color: colors.text }, selectedCategory === null && styles.chipTextSelected]}>All</Text>
             </TouchableOpacity>
             {categories.map(c => (
-              <TouchableOpacity key={c.id} style={[styles.chip, selectedCategory === c.id && styles.chipSelected]} onPress={() => setSelectedCategory(c.id)}>
-                <Text style={[styles.chipText, selectedCategory === c.id && styles.chipTextSelected]}>{c.icon} {c.name}</Text>
+              <TouchableOpacity key={c.id} style={[styles.chip, { borderColor: colors.border }, selectedCategory === c.id && styles.chipSelected]} onPress={() => setSelectedCategory(c.id)}>
+                <Text style={[styles.chipText, { color: colors.text }, selectedCategory === c.id && styles.chipTextSelected]}>{c.icon} {c.name}</Text>
               </TouchableOpacity>
             ))}
           </View>
-
-          <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-            <Text style={styles.saveButtonText}>Save Target</Text>
+          <TouchableOpacity style={[styles.saveButton, { backgroundColor: colors.primary }]} onPress={handleSave}>
+            <Text style={[styles.saveButtonText, { color: colors.background }]}>Save Target</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.cancelButton} onPress={() => setModalVisible(false)}>
-            <Text style={styles.cancelButtonText}>Cancel</Text>
+            <Text style={[styles.cancelButtonText, { color: colors.subtext }]}>Cancel</Text>
           </TouchableOpacity>
         </ScrollView>
       </Modal>
@@ -217,12 +225,14 @@ const styles = StyleSheet.create({
   empty: { color: '#999', fontSize: 15, textAlign: 'center', marginTop: 40 },
   card: { borderBottomWidth: 1, borderBottomColor: '#eee', paddingVertical: 16 },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  cardActions: { flexDirection: 'row', gap: 12 },
   targetName: { fontSize: 16, fontWeight: '600', color: '#000' },
   targetMeta: { fontSize: 13, color: '#666', marginTop: 2, marginBottom: 8 },
   progressBar: { height: 6, backgroundColor: '#eee', borderRadius: 3, marginBottom: 6 },
   progressFill: { height: 6, borderRadius: 3 },
   progressText: { fontSize: 13, color: '#666' },
   exceeded: { color: '#34c759', fontWeight: '600' },
+  editText: { color: '#000', fontSize: 14, fontWeight: '600' },
   deleteText: { color: '#ff3b30', fontSize: 14, fontWeight: '600' },
   addButton: { backgroundColor: '#000', padding: 14, borderRadius: 8, alignItems: 'center', marginTop: 8 },
   addButtonText: { color: '#fff', fontSize: 15, fontWeight: '600' },

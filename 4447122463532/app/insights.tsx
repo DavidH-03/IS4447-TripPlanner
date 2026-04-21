@@ -1,3 +1,4 @@
+import { useTheme } from '@/context/theme-context';
 import { db } from '@/db/client';
 import { activities as activitiesTable, categories as categoriesTable } from '@/db/schema';
 import { useFocusEffect } from 'expo-router';
@@ -15,6 +16,7 @@ type CategoryStat = {
 const SCREEN_WIDTH = Dimensions.get('window').width - 32;
 
 export default function Insights() {
+  const { colors } = useTheme();
   const [stats, setStats] = useState<CategoryStat[]>([]);
   const [period, setPeriod] = useState<'weekly' | 'monthly' | 'all'>('weekly');
   const [totalHours, setTotalHours] = useState(0);
@@ -64,17 +66,17 @@ export default function Insights() {
   const maxDuration = Math.max(...stats.map(s => s.totalDuration), 1);
 
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.header}>Insights</Text>
+    <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
+      <Text style={[styles.header, { color: colors.text }]}>Insights</Text>
 
       <View style={styles.periodRow}>
         {(['weekly', 'monthly', 'all'] as const).map(p => (
           <TouchableOpacity
             key={p}
-            style={[styles.periodChip, period === p && styles.periodChipSelected]}
+            style={[styles.periodChip, { borderColor: colors.border }, period === p && styles.periodChipSelected]}
             onPress={() => setPeriod(p)}
           >
-            <Text style={[styles.periodChipText, period === p && styles.periodChipTextSelected]}>
+            <Text style={[styles.periodChipText, { color: colors.text }, period === p && styles.periodChipTextSelected]}>
               {p === 'weekly' ? 'This Week' : p === 'monthly' ? 'This Month' : 'All Time'}
             </Text>
           </TouchableOpacity>
@@ -82,37 +84,37 @@ export default function Insights() {
       </View>
 
       <View style={styles.summaryRow}>
-        <View style={styles.summaryCard}>
-          <Text style={styles.summaryValue}>{totalActivities}</Text>
-          <Text style={styles.summaryLabel}>Activities</Text>
+        <View style={[styles.summaryCard, { borderColor: colors.border }]}>
+          <Text style={[styles.summaryValue, { color: colors.text }]}>{totalActivities}</Text>
+          <Text style={[styles.summaryLabel, { color: colors.subtext }]}>Activities</Text>
         </View>
-        <View style={styles.summaryCard}>
-          <Text style={styles.summaryValue}>{totalHours.toFixed(1)}</Text>
-          <Text style={styles.summaryLabel}>Hours</Text>
+        <View style={[styles.summaryCard, { borderColor: colors.border }]}>
+          <Text style={[styles.summaryValue, { color: colors.text }]}>{totalHours.toFixed(1)}</Text>
+          <Text style={[styles.summaryLabel, { color: colors.subtext }]}>Hours</Text>
         </View>
       </View>
 
       {stats.length === 0 ? (
-        <Text style={styles.empty}>No activities for this period.</Text>
+        <Text style={[styles.empty, { color: colors.subtext }]}>No activities for this period.</Text>
       ) : (
         <>
-          <Text style={styles.sectionHeader}>Hours by Category</Text>
+          <Text style={[styles.sectionHeader, { color: colors.text }]}>Hours by Category</Text>
           {stats.map((stat) => (
             <View key={stat.name} style={styles.barRow}>
-              <Text style={styles.barLabel}>{stat.icon} {stat.name}</Text>
-              <View style={styles.barBackground}>
+              <Text style={[styles.barLabel, { color: colors.text }]}>{stat.icon} {stat.name}</Text>
+              <View style={[styles.barBackground, { backgroundColor: colors.border }]}>
                 <View style={[styles.barFill, { width: (stat.totalDuration / maxDuration) * SCREEN_WIDTH * 0.6, backgroundColor: stat.colour }]} />
               </View>
-              <Text style={styles.barValue}>{stat.totalDuration}h</Text>
+              <Text style={[styles.barValue, { color: colors.subtext }]}>{stat.totalDuration}h</Text>
             </View>
           ))}
 
-          <Text style={styles.sectionHeader}>Activities by Category</Text>
+          <Text style={[styles.sectionHeader, { color: colors.text }]}>Activities by Category</Text>
           {stats.map((stat) => (
-            <View key={stat.name} style={styles.statRow}>
+            <View key={stat.name} style={[styles.statRow, { borderBottomColor: colors.border }]}>
               <View style={[styles.dot, { backgroundColor: stat.colour }]} />
-              <Text style={styles.statName}>{stat.icon} {stat.name}</Text>
-              <Text style={styles.statValue}>{stat.count} activities</Text>
+              <Text style={[styles.statName, { color: colors.text }]}>{stat.icon} {stat.name}</Text>
+              <Text style={[styles.statValue, { color: colors.subtext }]}>{stat.count} activities</Text>
             </View>
           ))}
         </>
