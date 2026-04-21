@@ -1,5 +1,6 @@
 import { db } from '@/db/client';
 import { trips as tripsTable } from '@/db/schema';
+import { seedIfEmpty } from '@/db/seed';
 import { Stack } from 'expo-router';
 import { createContext, useEffect, useState } from 'react';
 
@@ -23,9 +24,10 @@ export const TripContext = createContext<TripContextType | null>(null);
 export default function RootLayout() {
   const [trips, setTrips] = useState<Trip[]>([]);
 
-useEffect(() => {
+  useEffect(() => {
     const loadTrips = async () => {
       try {
+        await seedIfEmpty();
         const rows = await db.select().from(tripsTable);
         setTrips(rows);
       } catch (e) {
@@ -41,6 +43,8 @@ useEffect(() => {
         <Stack.Screen name="index" options={{ title: 'My Trips' }} />
         <Stack.Screen name="add-trip" options={{ title: 'Add Trip' }} />
         <Stack.Screen name="edit-trip" options={{ title: 'Edit Trip' }} />
+        <Stack.Screen name="trip-detail" options={{ title: 'Trip Details' }} />
+        <Stack.Screen name="add-activity" options={{ title: 'Add Activity' }} />
       </Stack>
     </TripContext.Provider>
   );

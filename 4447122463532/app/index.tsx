@@ -29,22 +29,24 @@ export default function Index() {
           data={trips}
           keyExtractor={(item) => item.id.toString()}
           renderItem={({ item }) => (
-            <View style={styles.card}>
-              <View style={styles.cardContent}>
-                <Text style={styles.tripName}>{item.name}</Text>
-                <Text style={styles.tripDestination}>{item.destination}</Text>
-                <Text style={styles.tripDates}>{item.startDate} → {item.endDate}</Text>
-              </View>
-              <View style={styles.cardActions}>
-                <TouchableOpacity onPress={() => router.push(`/edit-trip?id=${item.id}`)}>
-                  <Text style={styles.editText}>Edit</Text>
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => handleDelete(item.id)}>
-                  <Text style={styles.deleteText}>Delete</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          )}
+  <TouchableOpacity onPress={() => router.push(`/trip-detail?id=${item.id}`)}>
+    <View style={styles.card}>
+      <View style={styles.cardContent}>
+        <Text style={styles.tripName}>{item.name}</Text>
+        <Text style={styles.tripDestination}>{item.destination}</Text>
+        <Text style={styles.tripDates}>{item.startDate} → {item.endDate}</Text>
+      </View>
+      <View style={styles.cardActions}>
+        <TouchableOpacity onPress={() => router.push(`/edit-trip?id=${item.id}`)}>
+          <Text style={styles.editText}>Edit</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => handleDelete(item.id)}>
+          <Text style={styles.deleteText}>Delete</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  </TouchableOpacity>
+)}
         />
       )}
       <TouchableOpacity style={styles.addButton} onPress={() => router.push('/add-trip')}>
