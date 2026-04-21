@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 const placeholderTrips = [
@@ -6,6 +7,8 @@ const placeholderTrips = [
 ];
 
 export default function Index() {
+  const router = useRouter();
+
   return (
     <View style={styles.container}>
       <Text style={styles.header}>My Trips</Text>
@@ -20,7 +23,7 @@ export default function Index() {
           </View>
         )}
       />
-      <TouchableOpacity style={styles.addButton}>
+      <TouchableOpacity style={styles.addButton} onPress={() => router.push('/add-trip')}>
         <Text style={styles.addButtonText}>+ Add Trip</Text>
       </TouchableOpacity>
     </View>
