@@ -23,6 +23,7 @@ export default function Insights() {
   const [period, setPeriod] = useState<'weekly' | 'monthly' | 'all'>('weekly');
   const [totalHours, setTotalHours] = useState(0);
   const [totalActivities, setTotalActivities] = useState(0);
+  const [streak, setStreak] = useState(0);
 
   useFocusEffect(
     useCallback(() => {
@@ -63,8 +64,10 @@ export default function Insights() {
     setStats(statsArray);
     setTotalHours(filtered.reduce((sum, a) => sum + a.duration, 0));
     setTotalActivities(filtered.length);
+    const s = await calculateStreak();
+  setStreak(s);
   };
-
+  
   const exportCSV = async () => {
     const allActivities = await db.select().from(activitiesTable);
     const allCategories = await db.select().from(categoriesTable);
@@ -78,6 +81,26 @@ export default function Insights() {
     await FileSystem.writeAsStringAsync(fileUri, csv, { encoding: 'utf8' });
     await Sharing.shareAsync(fileUri);
   };
+
+const calculateStreak = async () => {
+  const allActivities = await db.select().from(activitiesTable);
+  const dates = [...new Set(allActivities.map(a => a.date))].sort();
+  if (dates.length === 0) return 0;
+  let streak = 1;
+  let maxStreak = 1;
+  for (let i = 1; i < dates.length; i++) {
+    const prev = new Date(dates[i - 1]);
+    const curr = new Date(dates[i]);
+    const diffDays = (curr.getTime() - prev.getTime()) / (1000 * 60 * 60 * 24);
+    if (diffDays === 1) {
+      streak++;
+      maxStreak = Math.max(maxStreak, streak);
+    } else {
+      streak = 1;
+    }
+  }
+  return maxStreak;
+};
 
   const maxDuration = Math.max(...stats.map(s => s.totalDuration), 1);
 
@@ -100,15 +123,20 @@ export default function Insights() {
       </View>
 
       <View style={styles.summaryRow}>
-        <View style={[styles.summaryCard, { borderColor: colors.border }]}>
-          <Text style={[styles.summaryValue, { color: colors.text }]}>{totalActivities}</Text>
-          <Text style={[styles.summaryLabel, { color: colors.subtext }]}>Activities</Text>
-        </View>
-        <View style={[styles.summaryCard, { borderColor: colors.border }]}>
-          <Text style={[styles.summaryValue, { color: colors.text }]}>{totalHours.toFixed(1)}</Text>
-          <Text style={[styles.summaryLabel, { color: colors.subtext }]}>Hours</Text>
-        </View>
-      </View>
+  <View style={[styles.summaryCard, { borderColor: colors.border }]}>
+    <Text style={[styles.summaryValue, { color: colors.text }]}>{totalActivities}</Text>
+    <Text style={[styles.summaryLabel, { color: colors.subtext }]}>Activities</Text>
+  </View>
+  <View style={[styles.summaryCard, { borderColor: colors.border }]}>
+    <Text style={[styles.summaryValue, { color: colors.text }]}>{totalHours.toFixed(1)}</Text>
+    <Text style={[styles.summaryLabel, { color: colors.subtext }]}>Hours</Text>
+  </View>
+  <View style={[styles.summaryCard, { borderColor: colors.border }]}>
+    <Text style={[styles.summaryValue, { color: colors.text }]}>{streak}</Text>
+    <Text style={[styles.summaryLabel, { color: colors.subtext }]}>Day Streak 🔥</Text>
+  </View>
+</View>
+      
 
       {stats.length === 0 ? (
         <Text style={[styles.empty, { color: colors.subtext }]}>No activities for this period.</Text>
@@ -151,7 +179,7 @@ const styles = StyleSheet.create({
   periodChipSelected: { backgroundColor: '#000', borderColor: '#000' },
   periodChipText: { fontSize: 13, color: '#000' },
   periodChipTextSelected: { color: '#fff' },
-  summaryRow: { flexDirection: 'row', gap: 12, marginBottom: 24 },
+  summaryRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 24 },
   summaryCard: { flex: 1, borderWidth: 1, borderColor: '#eee', borderRadius: 8, padding: 16, alignItems: 'center' },
   summaryValue: { fontSize: 28, fontWeight: '700', color: '#000' },
   summaryLabel: { fontSize: 13, color: '#666', marginTop: 4 },
