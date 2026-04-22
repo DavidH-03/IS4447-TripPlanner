@@ -1,17 +1,9 @@
 import { db } from './client';
-import { activities, categories, targets, trips, users } from './schema';
+import { activities, categories, targets, trips } from './schema';
 
 export async function seedIfEmpty() {
   const existingTrips = await db.select().from(trips);
   if (existingTrips.length > 0) return;
-
-  // Always insert seed user with id 1
-  await db.insert(users).values({
-    name: 'David',
-    email: 'david@email.com',
-    password: 'password123',
-    createdAt: new Date().toISOString(),
-  });
 
   await db.insert(categories).values([
     { name: 'Sightseeing', colour: '#FF6B6B', icon: '🏛️', createdAt: new Date().toISOString() },

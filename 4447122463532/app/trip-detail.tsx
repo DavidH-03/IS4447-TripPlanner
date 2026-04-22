@@ -1,11 +1,11 @@
+import DatePicker from '@/components/ui/date-picker';
 import { useTheme } from '@/context/theme-context';
 import { db } from '@/db/client';
 import { activities as activitiesTable, categories as categoriesTable, trips as tripsTable } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-
+import { Alert, FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 type Activity = {
   id: number;
   name: string;
@@ -60,10 +60,15 @@ export default function TripDetail() {
   }, [id]);
 
   const handleDeleteActivity = async (activityId: number) => {
-    await db.delete(activitiesTable).where(eq(activitiesTable.id, activityId));
-    const rows = await db.select().from(activitiesTable).where(eq(activitiesTable.tripId, Number(id)));
-    setActivities(rows);
-  };
+  Alert.alert('Delete Activity', 'Are you sure?', [
+    { text: 'Cancel', style: 'cancel' },
+    { text: 'Delete', style: 'destructive', onPress: async () => {
+      await db.delete(activitiesTable).where(eq(activitiesTable.id, activityId));
+      const rows = await db.select().from(activitiesTable).where(eq(activitiesTable.tripId, Number(id)));
+      setActivities(rows);
+    }}
+  ]);
+};
 
   const filteredActivities = activities.filter(a => {
     const matchesSearch = search === '' || a.name.toLowerCase().includes(search.toLowerCase()) || (a.notes && a.notes.toLowerCase().includes(search.toLowerCase()));
@@ -100,22 +105,9 @@ if (!trip) return (
 
       {showFilters && (
         <View style={styles.filterBox}>
-          <View style={styles.dateRow}>
-            <TextInput
-              style={[styles.dateInput, { borderColor: colors.border, color: colors.text, backgroundColor: colors.card }]}
-              placeholder="From (YYYY-MM-DD)"
-              placeholderTextColor={colors.subtext}
-              value={fromDate}
-              onChangeText={setFromDate}
-            />
-            <TextInput
-              style={[styles.dateInput, { borderColor: colors.border, color: colors.text, backgroundColor: colors.card }]}
-              placeholder="To (YYYY-MM-DD)"
-              placeholderTextColor={colors.subtext}
-              value={toDate}
-              onChangeText={setToDate}
-            />
-          </View>
+          <DatePicker label="From" value={fromDate} onChange={setFromDate} />
+          <DatePicker label="To" value={toDate} onChange={setToDate} />
+
           <View style={styles.categoryRow}>
             <TouchableOpacity
               style={[styles.catChip, { borderColor: colors.border }, selectedCategory === null && styles.catChipSelected]}
@@ -179,8 +171,6 @@ const styles = StyleSheet.create({
   sectionHeader: { fontSize: 16, fontWeight: '700', color: '#000', marginTop: 20, marginBottom: 10, textTransform: 'uppercase', letterSpacing: 0.8 },
   searchInput: { borderWidth: 1, borderColor: '#ddd', borderRadius: 20, padding: 10, paddingHorizontal: 16, fontSize: 14, marginBottom: 8 },  filterToggle: { color: '#666', fontSize: 13, marginBottom: 8 },
   filterBox: { marginBottom: 12 },
-  dateRow: { flexDirection: 'row', gap: 8, marginBottom: 8 },
-  dateInput: { flex: 1, borderWidth: 1, borderColor: '#ddd', borderRadius: 8, padding: 8, fontSize: 12 },
   categoryRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   catChip: { borderWidth: 1, borderColor: '#ddd', borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4 },
   catChipSelected: { backgroundColor: '#000', borderColor: '#000' },

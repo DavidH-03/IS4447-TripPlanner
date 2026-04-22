@@ -4,7 +4,7 @@ import { db } from '@/db/client';
 import { categories as categoriesTable } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { useEffect, useState } from 'react';
-import { FlatList, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, FlatList, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 type Category = {
   id: number;
@@ -65,9 +65,14 @@ export default function Categories() {
   };
 
   const handleDelete = async (id: number) => {
-    await db.delete(categoriesTable).where(eq(categoriesTable.id, id));
-    loadCategories();
-  };
+  Alert.alert('Delete Category', 'Are you sure?', [
+    { text: 'Cancel', style: 'cancel' },
+    { text: 'Delete', style: 'destructive', onPress: async () => {
+      await db.delete(categoriesTable).where(eq(categoriesTable.id, id));
+      loadCategories();
+    }}
+  ]);
+};
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>

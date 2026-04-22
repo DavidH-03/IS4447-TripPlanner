@@ -1,5 +1,4 @@
 import { useTheme } from '@/context/theme-context';
-import DateTimePicker from '@react-native-community/datetimepicker';
 import { useState } from 'react';
 import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 

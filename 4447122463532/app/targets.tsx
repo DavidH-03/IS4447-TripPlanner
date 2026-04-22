@@ -6,7 +6,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { eq } from 'drizzle-orm';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { FlatList, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, FlatList, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+
 
 type Target = {
   id: number;
@@ -121,9 +122,14 @@ export default function Targets() {
   };
 
   const handleDelete = async (id: number) => {
-    await db.delete(targetsTable).where(eq(targetsTable.id, id));
-    loadData();
-  };
+  Alert.alert('Delete Target', 'Are you sure?', [
+    { text: 'Cancel', style: 'cancel' },
+    { text: 'Delete', style: 'destructive', onPress: async () => {
+      await db.delete(targetsTable).where(eq(targetsTable.id, id));
+      loadData();
+    }}
+  ]);
+};
 
   const getCategoryName = (id: number | null) => {
     if (!id) return 'All Activities';

@@ -1,10 +1,12 @@
 import FormField from '@/components/ui/form-field';
+import { useTheme } from '@/context/theme-context';
 import { db } from '@/db/client';
 import { activities as activitiesTable, categories as categoriesTable } from '@/db/schema';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
+// category type used for rendering 
 type Category = {
   id: number;
   name: string;
@@ -15,6 +17,7 @@ type Category = {
 export default function AddActivity() {
   const router = useRouter();
   const { tripId } = useLocalSearchParams();
+  const { colors } = useTheme();
   const [name, setName] = useState('');
   const [date, setDate] = useState('');
   const [duration, setDuration] = useState('');
@@ -22,6 +25,7 @@ export default function AddActivity() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
 
+  // load categories from db and set a default selection
   useEffect(() => {
     const loadCategories = async () => {
       const rows = await db.select().from(categoriesTable);
@@ -31,6 +35,7 @@ export default function AddActivity() {
     void loadCategories();
   }, []);
 
+  // validate input and insert new activity into db
   const handleSave = async () => {
     if (!name || !date || !duration || !selectedCategory) {
       alert('Please fill in all required fields');
@@ -48,21 +53,22 @@ export default function AddActivity() {
     router.back();
   };
 
+  // main form layout for creating an activity
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
       <FormField label="Activity Name" value={name} onChangeText={setName} placeholder="e.g. Eiffel Tower visit" />
       <FormField label="Date" value={date} onChangeText={setDate} placeholder="YYYY-MM-DD" />
       <FormField label="Duration (hours)" value={duration} onChangeText={setDuration} placeholder="e.g. 2.5" />
 
-      <Text style={styles.label}>Category</Text>
+      <Text style={[styles.label, { color: colors.text }]}>Category</Text>
       <View style={styles.categoryList}>
         {categories.map((cat) => (
           <TouchableOpacity
             key={cat.id}
-            style={[styles.categoryChip, selectedCategory === cat.id && styles.categoryChipSelected]}
+            style={[styles.categoryChip, { borderColor: colors.border }, selectedCategory === cat.id && styles.categoryChipSelected]}
             onPress={() => setSelectedCategory(cat.id)}
           >
-            <Text style={[styles.categoryChipText, selectedCategory === cat.id && styles.categoryChipTextSelected]}>
+            <Text style={[styles.categoryChipText, { color: colors.text }, selectedCategory === cat.id && styles.categoryChipTextSelected]}>
               {cat.icon} {cat.name}
             </Text>
           </TouchableOpacity>
@@ -71,17 +77,18 @@ export default function AddActivity() {
 
       <FormField label="Notes (optional)" value={notes} onChangeText={setNotes} placeholder="Any notes..." multiline />
 
-      <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-        <Text style={styles.saveButtonText}>Save Activity</Text>
+      <TouchableOpacity style={[styles.saveButton, { backgroundColor: colors.primary }]} onPress={handleSave}>
+        <Text style={[styles.saveButtonText, { color: colors.background }]}>Save Activity</Text>
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.cancelButton} onPress={() => router.back()}>
-        <Text style={styles.cancelButtonText}>Cancel</Text>
+        <Text style={[styles.cancelButtonText, { color: colors.subtext }]}>Cancel</Text>
       </TouchableOpacity>
     </ScrollView>
   );
 }
 
+// basic styles for layout and categorys
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff', padding: 16 },
   label: { fontSize: 14, fontWeight: '600', color: '#000', marginBottom: 8 },
