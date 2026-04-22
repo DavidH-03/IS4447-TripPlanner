@@ -1,7 +1,9 @@
 import { useTheme } from '@/context/theme-context';
 import { db } from '@/db/client';
 import { activities as activitiesTable, categories as categoriesTable } from '@/db/schema';
+import * as FileSystem from 'expo-file-system/legacy';
 import { useFocusEffect } from 'expo-router';
+import * as Sharing from 'expo-sharing';
 import { useCallback, useState } from 'react';
 import { Dimensions, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
@@ -63,6 +65,20 @@ export default function Insights() {
     setTotalActivities(filtered.length);
   };
 
+  const exportCSV = async () => {
+    const allActivities = await db.select().from(activitiesTable);
+    const allCategories = await db.select().from(categoriesTable);
+    const header = 'Name,Date,Duration (hrs),Category,Notes\n';
+    const rows = allActivities.map(a => {
+      const cat = allCategories.find(c => c.id === a.categoryId);
+      return `"${a.name}","${a.date}","${a.duration}","${cat?.name || 'Unknown'}","${a.notes || ''}"`;
+    }).join('\n');
+    const csv = header + rows;
+    const fileUri = FileSystem.documentDirectory + 'activities.csv';
+    await FileSystem.writeAsStringAsync(fileUri, csv, { encoding: 'utf8' });
+    await Sharing.shareAsync(fileUri);
+  };
+
   const maxDuration = Math.max(...stats.map(s => s.totalDuration), 1);
 
   return (
@@ -119,6 +135,10 @@ export default function Insights() {
           ))}
         </>
       )}
+
+      <TouchableOpacity style={[styles.exportButton, { backgroundColor: colors.primary }]} onPress={exportCSV}>
+        <Text style={[styles.exportButtonText, { color: colors.background }]}>Export CSV</Text>
+      </TouchableOpacity>
     </ScrollView>
   );
 }
@@ -146,4 +166,6 @@ const styles = StyleSheet.create({
   dot: { width: 10, height: 10, borderRadius: 5 },
   statName: { flex: 1, fontSize: 14, color: '#000' },
   statValue: { fontSize: 14, color: '#666' },
+  exportButton: { padding: 14, borderRadius: 8, alignItems: 'center', marginTop: 16, marginBottom: 32 },
+  exportButtonText: { fontSize: 15, fontWeight: '600' },
 });
