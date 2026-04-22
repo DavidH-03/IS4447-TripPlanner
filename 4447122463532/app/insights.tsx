@@ -7,6 +7,7 @@ import * as Sharing from 'expo-sharing';
 import { useCallback, useState } from 'react';
 import { Dimensions, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
+// type for aggregated stats per category
 type CategoryStat = {
   name: string;
   colour: string;
@@ -15,21 +16,26 @@ type CategoryStat = {
   count: number;
 };
 
+// used to scale bar chart width
 const SCREEN_WIDTH = Dimensions.get('window').width - 32;
 
+// insights screen showing activity analytics
 export default function Insights() {
   const { colors } = useTheme();
   const [stats, setStats] = useState<CategoryStat[]>([]);
-  const [period, setPeriod] = useState<'daily' | 'weekly' | 'monthly' | 'all'>('weekly');  const [totalHours, setTotalHours] = useState(0);
+  const [period, setPeriod] = useState<'daily' | 'weekly' | 'monthly' | 'all'>('weekly');
+  const [totalHours, setTotalHours] = useState(0);
   const [totalActivities, setTotalActivities] = useState(0);
   const [streak, setStreak] = useState(0);
 
+  // reload stats whenever screen is focused or period changes
   useFocusEffect(
     useCallback(() => {
       loadStats();
     }, [period])
   );
 
+  // load activities, filter by period, then build stats
   const loadStats = async () => {
     const now = new Date();
     const startOfWeek = new Date(now);
@@ -49,13 +55,12 @@ export default function Insights() {
       return true;
     });
 
-    
-
     const statsMap: Record<number, CategoryStat> = {};
     for (const cat of allCategories) {
       statsMap[cat.id] = { name: cat.name, colour: cat.colour, icon: cat.icon, totalDuration: 0, count: 0 };
     }
 
+    // accumulate duration and counts per category
     for (const act of filtered) {
       if (statsMap[act.categoryId]) {
         statsMap[act.categoryId].totalDuration += act.duration;
@@ -67,46 +72,57 @@ export default function Insights() {
     setStats(statsArray);
     setTotalHours(filtered.reduce((sum, a) => sum + a.duration, 0));
     setTotalActivities(filtered.length);
+
     const s = await calculateStreak();
-  setStreak(s);
+    setStreak(s);
   };
-  
+
+  // export all activities to csv and trigger share sheet
   const exportCSV = async () => {
     const allActivities = await db.select().from(activitiesTable);
     const allCategories = await db.select().from(categoriesTable);
+
     const header = 'Name,Date,Duration (hrs),Category,Notes\n';
     const rows = allActivities.map(a => {
       const cat = allCategories.find(c => c.id === a.categoryId);
       return `"${a.name}","${a.date}","${a.duration}","${cat?.name || 'Unknown'}","${a.notes || ''}"`;
     }).join('\n');
+
     const csv = header + rows;
     const fileUri = FileSystem.documentDirectory + 'activities.csv';
     await FileSystem.writeAsStringAsync(fileUri, csv, { encoding: 'utf8' });
     await Sharing.shareAsync(fileUri);
   };
 
-const calculateStreak = async () => {
-  const allActivities = await db.select().from(activitiesTable);
-  const dates = [...new Set(allActivities.map(a => a.date))].sort();
-  if (dates.length === 0) return 0;
-  let streak = 1;
-  let maxStreak = 1;
-  for (let i = 1; i < dates.length; i++) {
-    const prev = new Date(dates[i - 1]);
-    const curr = new Date(dates[i]);
-    const diffDays = (curr.getTime() - prev.getTime()) / (1000 * 60 * 60 * 24);
-    if (diffDays === 1) {
-      streak++;
-      maxStreak = Math.max(maxStreak, streak);
-    } else {
-      streak = 1;
-    }
-  }
-  return maxStreak;
-};
+  // calculate longest streak of consecutive days with activity
+  const calculateStreak = async () => {
+    const allActivities = await db.select().from(activitiesTable);
+    const dates = [...new Set(allActivities.map(a => a.date))].sort();
+    if (dates.length === 0) return 0;
 
+    let streak = 1;
+    let maxStreak = 1;
+
+    for (let i = 1; i < dates.length; i++) {
+      const prev = new Date(dates[i - 1]);
+      const curr = new Date(dates[i]);
+      const diffDays = (curr.getTime() - prev.getTime()) / (1000 * 60 * 60 * 24);
+
+      if (diffDays === 1) {
+        streak++;
+        maxStreak = Math.max(maxStreak, streak);
+      } else {
+        streak = 1;
+      }
+    }
+
+    return maxStreak;
+  };
+
+  // used to normalise bar widths
   const maxDuration = Math.max(...stats.map(s => s.totalDuration), 1);
 
+  // layout showing filters, summary and charts
   return (
     <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
       <Text style={[styles.header, { color: colors.text }]}>Insights</Text>
@@ -126,26 +142,27 @@ const calculateStreak = async () => {
       </View>
 
       <View style={styles.summaryRow}>
-  <View style={[styles.summaryCard, { borderColor: colors.border }]}>
-    <Text style={[styles.summaryValue, { color: colors.text }]}>{totalActivities}</Text>
-    <Text style={[styles.summaryLabel, { color: colors.subtext }]}>Activities</Text>
-  </View>
-  <View style={[styles.summaryCard, { borderColor: colors.border }]}>
-    <Text style={[styles.summaryValue, { color: colors.text }]}>{totalHours.toFixed(1)}</Text>
-    <Text style={[styles.summaryLabel, { color: colors.subtext }]}>Hours</Text>
-  </View>
-  <View style={[styles.summaryCard, { borderColor: colors.border }]}>
-    <Text style={[styles.summaryValue, { color: colors.text }]}>{streak}</Text>
-    <Text style={[styles.summaryLabel, { color: colors.subtext }]}>Day Streak 🔥</Text>
-  </View>
-</View>
-      
+        <View style={[styles.summaryCard, { borderColor: colors.border }]}>
+          <Text style={[styles.summaryValue, { color: colors.text }]}>{totalActivities}</Text>
+          <Text style={[styles.summaryLabel, { color: colors.subtext }]}>Activities</Text>
+        </View>
+        <View style={[styles.summaryCard, { borderColor: colors.border }]}>
+          <Text style={[styles.summaryValue, { color: colors.text }]}>{totalHours.toFixed(1)}</Text>
+          <Text style={[styles.summaryLabel, { color: colors.subtext }]}>Hours</Text>
+        </View>
+        <View style={[styles.summaryCard, { borderColor: colors.border }]}>
+          <Text style={[styles.summaryValue, { color: colors.text }]}>{streak}</Text>
+          <Text style={[styles.summaryLabel, { color: colors.subtext }]}>Day Streak 🔥</Text>
+        </View>
+      </View>
 
       {stats.length === 0 ? (
         <Text style={[styles.empty, { color: colors.subtext }]}>No activities for this period.</Text>
       ) : (
         <>
           <Text style={[styles.sectionHeader, { color: colors.text }]}>Hours by Category</Text>
+
+          {/* bar chart showing hours per category */}
           {stats.map((stat) => (
             <View key={stat.name} style={styles.barRow}>
               <Text style={[styles.barLabel, { color: colors.text }]}>{stat.icon} {stat.name}</Text>
@@ -157,6 +174,8 @@ const calculateStreak = async () => {
           ))}
 
           <Text style={[styles.sectionHeader, { color: colors.text }]}>Activities by Category</Text>
+
+          {/* list showing count per category */}
           {stats.map((stat) => (
             <View key={stat.name} style={[styles.statRow, { borderBottomColor: colors.border }]}>
               <View style={[styles.dot, { backgroundColor: stat.colour }]} />
@@ -174,6 +193,7 @@ const calculateStreak = async () => {
   );
 }
 
+// styles for layout, charts and summary cards
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff', padding: 16, paddingTop: 60 },
   header: { fontSize: 24, fontWeight: '600', color: '#000', marginBottom: 20 },

@@ -8,7 +8,7 @@ import { useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Alert, FlatList, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-
+// target structure used for tracking goals
 type Target = {
   id: number;
   name: string;
@@ -18,12 +18,14 @@ type Target = {
   categoryId: number | null;
 };
 
+// simplified category type for selection
 type Category = {
   id: number;
   name: string;
   icon: string;
 };
 
+// screen for creating and tracking targets
 export default function Targets() {
   const { colors } = useTheme();
   const [targets, setTargets] = useState<Target[]>([]);
@@ -37,12 +39,14 @@ export default function Targets() {
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [progress, setProgress] = useState<Record<number, number>>({});
 
+  // reload targets and categories when screen is focused
   useFocusEffect(
     useCallback(() => {
       loadData();
     }, [])
   );
 
+  // fetch targets and categories then calculate progress
   const loadData = async () => {
     const t = await db.select().from(targetsTable);
     const c = await db.select().from(categoriesTable);
@@ -51,30 +55,37 @@ export default function Targets() {
     calculateProgress(t);
   };
 
+  // calculate progress for each target based on activities
   const calculateProgress = async (targets: Target[]) => {
     const now = new Date();
     const startOfWeek = new Date(now);
     startOfWeek.setDate(now.getDate() - now.getDay());
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
     const allActivities = await db.select().from(activitiesTable);
     const progressMap: Record<number, number> = {};
+
     for (const target of targets) {
       const start = target.period === 'weekly' ? startOfWeek : startOfMonth;
+
       const filtered = allActivities.filter(a => {
         const actDate = new Date(a.date);
         const inPeriod = actDate >= start && actDate <= now;
         const inCategory = target.categoryId ? a.categoryId === target.categoryId : true;
         return inPeriod && inCategory;
       });
+
       if (target.type === 'count') {
         progressMap[target.id] = filtered.length;
       } else {
         progressMap[target.id] = filtered.reduce((sum, a) => sum + a.duration, 0);
       }
     }
+
     setProgress(progressMap);
   };
 
+  // reset form for adding a new target
   const openAdd = () => {
     setEditingId(null);
     setName('');
@@ -85,6 +96,7 @@ export default function Targets() {
     setModalVisible(true);
   };
 
+  // populate form for editing existing target
   const openEdit = (target: Target) => {
     setEditingId(target.id);
     setName(target.name);
@@ -95,13 +107,16 @@ export default function Targets() {
     setModalVisible(true);
   };
 
+  // insert or update target then reload data
   const handleSave = async () => {
     if (!name || !targetValue) {
       alert('Please fill in all fields');
       return;
     }
+
     const stored = await AsyncStorage.getItem('user');
     const user = JSON.parse(stored!);
+
     if (editingId) {
       await db.update(targetsTable).set({
         name, type, period,
@@ -117,38 +132,45 @@ export default function Targets() {
         createdAt: new Date().toISOString(),
       });
     }
+
     setModalVisible(false);
     loadData();
   };
 
+  // confirm before deleting target
   const handleDelete = async (id: number) => {
-  Alert.alert('Delete Target', 'Are you sure?', [
-    { text: 'Cancel', style: 'cancel' },
-    { text: 'Delete', style: 'destructive', onPress: async () => {
-      await db.delete(targetsTable).where(eq(targetsTable.id, id));
-      loadData();
-    }}
-  ]);
-};
+    Alert.alert('Delete Target', 'Are you sure?', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Delete', style: 'destructive', onPress: async () => {
+        await db.delete(targetsTable).where(eq(targetsTable.id, id));
+        loadData();
+      }}
+    ]);
+  };
 
+  // helper to display category name
   const getCategoryName = (id: number | null) => {
     if (!id) return 'All Activities';
     return categories.find(c => c.id === id)?.name || 'Unknown';
   };
 
+  // layout showing targets list and modal form
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <Text style={[styles.header, { color: colors.text }]}>Targets</Text>
+
       {targets.length === 0 ? (
         <Text style={[styles.empty, { color: colors.subtext }]}>No targets yet. Add your first one!</Text>
       ) : (
         <FlatList
           data={targets}
           keyExtractor={(item) => item.id.toString()}
+          // render each target with progress bar
           renderItem={({ item }) => {
             const current = progress[item.id] || 0;
             const percentage = Math.min((current / item.targetValue) * 100, 100);
             const exceeded = current >= item.targetValue;
+
             return (
               <View style={[styles.card, { borderBottomColor: colors.border }]}>
                 <View style={styles.cardHeader}>
@@ -162,12 +184,15 @@ export default function Targets() {
                     </TouchableOpacity>
                   </View>
                 </View>
+
                 <Text style={[styles.targetMeta, { color: colors.subtext }]}>
                   {item.period} · {getCategoryName(item.categoryId)}
                 </Text>
+
                 <View style={[styles.progressBar, { backgroundColor: colors.border }]}>
                   <View style={[styles.progressFill, { width: `${percentage}%` as any, backgroundColor: exceeded ? '#34c759' : colors.primary }]} />
                 </View>
+
                 <Text style={[styles.progressText, { color: colors.subtext }, exceeded && styles.exceeded]}>
                   {current} / {item.targetValue} {item.type === 'duration' ? 'hours' : 'activities'}
                   {exceeded ? ' Target met!' : ` (${(item.targetValue - current).toFixed(1)} remaining)`}
@@ -177,6 +202,7 @@ export default function Targets() {
           }}
         />
       )}
+
       <TouchableOpacity style={[styles.addButton, { backgroundColor: colors.primary }]} onPress={openAdd}>
         <Text style={[styles.addButtonText, { color: colors.background }]}>+ Add Target</Text>
       </TouchableOpacity>
@@ -184,38 +210,51 @@ export default function Targets() {
       <Modal visible={modalVisible} animationType="slide" presentationStyle="pageSheet">
         <ScrollView style={[styles.modal, { backgroundColor: colors.background }]}>
           <Text style={[styles.modalTitle, { color: colors.text }]}>{editingId ? 'Edit Target' : 'Add Target'}</Text>
+
           <FormField label="Target Name" value={name} onChangeText={setName} placeholder="e.g. Activities per week" />
           <FormField label="Target Value" value={targetValue} onChangeText={setTargetValue} placeholder="e.g. 5" />
+
           <Text style={[styles.label, { color: colors.text }]}>Type</Text>
           <View style={styles.row}>
             {['count', 'duration'].map(t => (
               <TouchableOpacity key={t} style={[styles.chip, { borderColor: colors.border }, type === t && styles.chipSelected]} onPress={() => setType(t)}>
-                <Text style={[styles.chipText, { color: colors.text }, type === t && styles.chipTextSelected]}>{t === 'count' ? 'Count' : 'Duration (hrs)'}</Text>
+                <Text style={[styles.chipText, { color: colors.text }, type === t && styles.chipTextSelected]}>
+                  {t === 'count' ? 'Count' : 'Duration (hrs)'}
+                </Text>
               </TouchableOpacity>
             ))}
           </View>
+
           <Text style={[styles.label, { color: colors.text }]}>Period</Text>
           <View style={styles.row}>
             {['weekly', 'monthly'].map(p => (
               <TouchableOpacity key={p} style={[styles.chip, { borderColor: colors.border }, period === p && styles.chipSelected]} onPress={() => setPeriod(p)}>
-                <Text style={[styles.chipText, { color: colors.text }, period === p && styles.chipTextSelected]}>{p === 'weekly' ? 'Weekly' : 'Monthly'}</Text>
+                <Text style={[styles.chipText, { color: colors.text }, period === p && styles.chipTextSelected]}>
+                  {p === 'weekly' ? 'Weekly' : 'Monthly'}
+                </Text>
               </TouchableOpacity>
             ))}
           </View>
+
           <Text style={[styles.label, { color: colors.text }]}>Category (optional)</Text>
           <View style={styles.row}>
             <TouchableOpacity style={[styles.chip, { borderColor: colors.border }, selectedCategory === null && styles.chipSelected]} onPress={() => setSelectedCategory(null)}>
               <Text style={[styles.chipText, { color: colors.text }, selectedCategory === null && styles.chipTextSelected]}>All</Text>
             </TouchableOpacity>
+
             {categories.map(c => (
               <TouchableOpacity key={c.id} style={[styles.chip, { borderColor: colors.border }, selectedCategory === c.id && styles.chipSelected]} onPress={() => setSelectedCategory(c.id)}>
-                <Text style={[styles.chipText, { color: colors.text }, selectedCategory === c.id && styles.chipTextSelected]}>{c.icon} {c.name}</Text>
+                <Text style={[styles.chipText, { color: colors.text }, selectedCategory === c.id && styles.chipTextSelected]}>
+                  {c.icon} {c.name}
+                </Text>
               </TouchableOpacity>
             ))}
           </View>
+
           <TouchableOpacity style={[styles.saveButton, { backgroundColor: colors.primary }]} onPress={handleSave}>
             <Text style={[styles.saveButtonText, { color: colors.background }]}>Save Target</Text>
           </TouchableOpacity>
+
           <TouchableOpacity style={styles.cancelButton} onPress={() => setModalVisible(false)}>
             <Text style={[styles.cancelButtonText, { color: colors.subtext }]}>Cancel</Text>
           </TouchableOpacity>
@@ -225,6 +264,7 @@ export default function Targets() {
   );
 }
 
+// styles for layout, cards and modal
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff', padding: 16, paddingTop: 60 },
   header: { fontSize: 24, fontWeight: '600', color: '#000', marginBottom: 20 },

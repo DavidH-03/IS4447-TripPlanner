@@ -6,6 +6,8 @@ import { eq } from 'drizzle-orm';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Alert, FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+
+// activity type used for list rendering
 type Activity = {
   id: number;
   name: string;
@@ -15,6 +17,7 @@ type Activity = {
   categoryId: number;
 };
 
+// trip type for header info
 type Trip = {
   id: number;
   name: string;
@@ -24,12 +27,22 @@ type Trip = {
   notes: string | null;
 };
 
+// category type for filtering and display
 type Category = {
   id: number;
   name: string;
   icon: string;
 };
 
+// country info fetched from api
+type CountryInfo = {
+  flag: string;
+  capital: string;
+  currency: string;
+  population: string;
+};
+
+// screen showing trip details and its activities
 export default function TripDetail() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
@@ -41,35 +54,78 @@ export default function TripDetail() {
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
   const [showFilters, setShowFilters] = useState(false);
+  const [countryInfo, setCountryInfo] = useState<CountryInfo | null>(null);
+  const [countryLoading, setCountryLoading] = useState(false);
+  const [countryError, setCountryError] = useState('');
   const { colors } = useTheme();
-  const formatDate = (dateStr: string) => {
-  const date = new Date(dateStr);
-  return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
-};
 
+  // format date for display
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  };
+
+  // fetch basic country info based on destination string
+  const fetchCountryInfo = async (destination: string) => {
+    setCountryLoading(true);
+    setCountryError('');
+    try {
+      const parts = destination.split(',');
+      const country = parts.length > 1 ? parts.pop()?.trim() : parts[0].split(' ').pop()?.trim();
+      const res = await fetch(`https://restcountries.com/v3.1/name/${country}`);
+      const data = await res.json();
+
+      if (data && data.length > 0) {
+        const c = data[0];
+        const currencyCode = Object.keys(c.currencies || {})[0];
+        const currencyName = c.currencies?.[currencyCode]?.name || 'Unknown';
+
+        setCountryInfo({
+          flag: c.flag,
+          capital: c.capital?.[0] || 'Unknown',
+          currency: `${currencyCode} - ${currencyName}`,
+          population: c.population.toLocaleString(),
+        });
+      } else {
+        setCountryError('Country info not found');
+      }
+    } catch (e) {
+      setCountryError('Failed to load country info');
+    }
+    setCountryLoading(false);
+  };
+
+  // load trip, activities and categories on mount
   useEffect(() => {
     const load = async () => {
       const tripRows = await db.select().from(tripsTable).where(eq(tripsTable.id, Number(id)));
-      if (tripRows.length > 0) setTrip(tripRows[0]);
+      if (tripRows.length > 0) {
+        setTrip(tripRows[0]);
+        await fetchCountryInfo(tripRows[0].destination);
+      }
+
       const activityRows = await db.select().from(activitiesTable).where(eq(activitiesTable.tripId, Number(id)));
       setActivities(activityRows);
+
       const catRows = await db.select().from(categoriesTable);
       setCategories(catRows);
     };
     void load();
   }, [id]);
 
+  // confirm and delete activity then refresh list
   const handleDeleteActivity = async (activityId: number) => {
-  Alert.alert('Delete Activity', 'Are you sure?', [
-    { text: 'Cancel', style: 'cancel' },
-    { text: 'Delete', style: 'destructive', onPress: async () => {
-      await db.delete(activitiesTable).where(eq(activitiesTable.id, activityId));
-      const rows = await db.select().from(activitiesTable).where(eq(activitiesTable.tripId, Number(id)));
-      setActivities(rows);
-    }}
-  ]);
-};
+    Alert.alert('Delete Activity', 'Are you sure?', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Delete', style: 'destructive', onPress: async () => {
+        await db.delete(activitiesTable).where(eq(activitiesTable.id, activityId));
+        const rows = await db.select().from(activitiesTable).where(eq(activitiesTable.tripId, Number(id)));
+        setActivities(rows);
+      }}
+    ]);
+  };
 
+  // apply search, category and date filters
   const filteredActivities = activities.filter(a => {
     const matchesSearch = search === '' || a.name.toLowerCase().includes(search.toLowerCase()) || (a.notes && a.notes.toLowerCase().includes(search.toLowerCase()));
     const matchesCategory = selectedCategory === null || a.categoryId === selectedCategory;
@@ -78,17 +134,33 @@ export default function TripDetail() {
     return matchesSearch && matchesCategory && matchesFrom && matchesTo;
   });
 
-if (!trip) return (
-  <View style={[styles.container, { backgroundColor: colors.background }]}>
-    <Text style={{ color: colors.text }}>Loading...</Text>
-  </View>
-);
+  if (!trip) return (
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <Text style={{ color: colors.text }}>Loading...</Text>
+    </View>
+  );
+
+  // main layout with trip info, filters and activity list
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <Text style={[styles.tripName, { color: colors.text }]}>{trip.name}</Text>
       <Text style={[styles.destination, { color: colors.subtext }]}>{trip.destination}</Text>
       <Text style={[styles.dates, { color: colors.subtext }]}>{formatDate(trip.startDate)} - {formatDate(trip.endDate)}</Text>
       {trip.notes ? <Text style={[styles.notes, { color: colors.subtext }]}>{trip.notes}</Text> : null}
+
+      {countryLoading ? (
+        <Text style={[styles.countryLoading, { color: colors.subtext }]}>Loading country info...</Text>
+      ) : countryError ? (
+        <Text style={[styles.countryLoading, { color: colors.subtext }]}>{countryError}</Text>
+      ) : countryInfo ? (
+        <View style={[styles.countryCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <Text style={[styles.countryTitle, { color: colors.text }]}>{countryInfo.flag} Destination Info</Text>
+          <Text style={[styles.countryDetail, { color: colors.subtext }]}>Capital: {countryInfo.capital}</Text>
+          <Text style={[styles.countryDetail, { color: colors.subtext }]}>Currency: {countryInfo.currency}</Text>
+          <Text style={[styles.countryDetail, { color: colors.subtext }]}>Population: {countryInfo.population}</Text>
+        </View>
+      ) : null}
+
       <Text style={[styles.sectionHeader, { color: colors.text }]}>Activities</Text>
 
       <TextInput
@@ -108,6 +180,7 @@ if (!trip) return (
           <DatePicker label="From" value={fromDate} onChange={setFromDate} />
           <DatePicker label="To" value={toDate} onChange={setToDate} />
 
+          {/* category filter chips */}
           <View style={styles.categoryRow}>
             <TouchableOpacity
               style={[styles.catChip, { borderColor: colors.border }, selectedCategory === null && styles.catChipSelected]}
@@ -115,13 +188,16 @@ if (!trip) return (
             >
               <Text style={[styles.catChipText, { color: colors.text }, selectedCategory === null && styles.catChipTextSelected]}>All</Text>
             </TouchableOpacity>
+
             {categories.map(c => (
               <TouchableOpacity
                 key={c.id}
                 style={[styles.catChip, { borderColor: colors.border }, selectedCategory === c.id && styles.catChipSelected]}
                 onPress={() => setSelectedCategory(c.id)}
               >
-                <Text style={[styles.catChipText, { color: colors.text }, selectedCategory === c.id && styles.catChipTextSelected]}>{c.icon} {c.name}</Text>
+                <Text style={[styles.catChipText, { color: colors.text }, selectedCategory === c.id && styles.catChipTextSelected]}>
+                  {c.icon} {c.name}
+                </Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -134,6 +210,7 @@ if (!trip) return (
         <FlatList
           data={filteredActivities}
           keyExtractor={(item) => item.id.toString()}
+          // render each activity with edit/delete actions
           renderItem={({ item }) => (
             <View style={[styles.activityCard, { borderBottomColor: colors.border }]}>
               <View style={[styles.categoryDot, { backgroundColor: categories.find(c => c.id === item.categoryId)?.colour || colors.border }]} />
@@ -162,14 +239,20 @@ if (!trip) return (
   );
 }
 
+// styles for layout, cards and filters
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff', padding: 16, paddingTop: 16 },
   tripName: { fontSize: 26, fontWeight: '700', color: '#000', marginBottom: 4 },
   destination: { fontSize: 18, color: '#666' },
   dates: { fontSize: 15, color: '#999', marginTop: 2 },
   notes: { fontSize: 15, color: '#666', marginTop: 6, fontStyle: 'italic' },
+  countryCard: { borderWidth: 1, borderRadius: 10, padding: 12, marginTop: 12, marginBottom: 4 },
+  countryTitle: { fontSize: 14, fontWeight: '600', marginBottom: 6 },
+  countryDetail: { fontSize: 13, marginTop: 2 },
+  countryLoading: { fontSize: 13, marginTop: 8 },
   sectionHeader: { fontSize: 16, fontWeight: '700', color: '#000', marginTop: 20, marginBottom: 10, textTransform: 'uppercase', letterSpacing: 0.8 },
-  searchInput: { borderWidth: 1, borderColor: '#ddd', borderRadius: 20, padding: 10, paddingHorizontal: 16, fontSize: 14, marginBottom: 8 },  filterToggle: { color: '#666', fontSize: 13, marginBottom: 8 },
+  searchInput: { borderWidth: 1, borderColor: '#ddd', borderRadius: 20, padding: 10, paddingHorizontal: 16, fontSize: 14, marginBottom: 8 },
+  filterToggle: { color: '#666', fontSize: 13, marginBottom: 8 },
   filterBox: { marginBottom: 12 },
   categoryRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   catChip: { borderWidth: 1, borderColor: '#ddd', borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4 },

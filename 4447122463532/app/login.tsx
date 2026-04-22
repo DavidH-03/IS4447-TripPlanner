@@ -8,12 +8,14 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity } from 'react-native';
 
+// login screen for authenticating user
 export default function Login() {
   const router = useRouter();
   const { colors } = useTheme();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
+  // check credentials against db and store user locally
   const handleLogin = async () => {
     if (!email || !password) {
       alert('Please fill in all fields');
@@ -29,6 +31,7 @@ export default function Login() {
     router.replace('/');
   };
 
+  // basic login form layout with navigation to register
   return (
     <ScrollView style={[styles.container, { backgroundColor: colors.background }]} contentContainerStyle={styles.content}>
       <Text style={[styles.title, { color: colors.text }]}>Tripit</Text>
@@ -48,6 +51,7 @@ export default function Login() {
   );
 }
 
+// styles for layout and form elements
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
   content: { padding: 24, paddingTop: 80 },

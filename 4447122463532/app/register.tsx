@@ -8,6 +8,7 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity } from 'react-native';
 
+// register screen for creating a new user account
 export default function Register() {
   const router = useRouter();
   const { colors } = useTheme();
@@ -15,6 +16,7 @@ export default function Register() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
+  // check if email exists then create user and store session
   const handleRegister = async () => {
     if (!name || !email || !password) {
       alert('Please fill in all fields');
@@ -36,6 +38,7 @@ export default function Register() {
     router.replace('/');
   };
 
+  // basic form layout for registration
   return (
     <ScrollView style={[styles.container, { backgroundColor: colors.background }]} contentContainerStyle={styles.content}>
       <Text style={[styles.title, { color: colors.text }]}>Create Account</Text>
@@ -56,6 +59,7 @@ export default function Register() {
   );
 }
 
+// styles for layout and form elements
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
   content: { padding: 24, paddingTop: 80 },

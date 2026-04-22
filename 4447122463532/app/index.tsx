@@ -86,7 +86,7 @@ export default function Index() {
                   <Text style={[styles.tripName, { color: colors.text }]}>{item.name}</Text>
                   <Text style={[styles.tripDestination, { color: colors.subtext }]}>{item.destination}</Text>
                   <Text style={[styles.tripDates, { color: colors.subtext }]}>
-                    {new Date(item.startDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} → {new Date(item.endDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    {new Date(item.startDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} to {new Date(item.endDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                   </Text>
                 </View>
                 <View style={styles.cardActions}>
