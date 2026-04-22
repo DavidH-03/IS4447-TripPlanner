@@ -6,6 +6,7 @@ import { eq } from 'drizzle-orm';
 import { useEffect, useState } from 'react';
 import { Alert, FlatList, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
+// category shape used across list and modal
 type Category = {
   id: number;
   name: string;
@@ -13,9 +14,11 @@ type Category = {
   icon: string;
 };
 
+// preset colour and icon options for quick selection
 const COLOURS = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8'];
 const ICONS = ['🏛️', '🍽️', '🥾', '🚂', '🏨', '🎭', '🛍️', '🏖️', '⛺', '🎵'];
 
+// screen to manage categories with full crud
 export default function Categories() {
   const { colors } = useTheme();
   const [categories, setCategories] = useState<Category[]>([]);
@@ -25,15 +28,18 @@ export default function Categories() {
   const [colour, setColour] = useState(COLOURS[0]);
   const [icon, setIcon] = useState(ICONS[0]);
 
+  // load categories when screen mounts
   useEffect(() => {
     loadCategories();
   }, []);
 
+  // fetch categories from db into state
   const loadCategories = async () => {
     const rows = await db.select().from(categoriesTable);
     setCategories(rows);
   };
 
+  // reset form and open modal for creating new category
   const openAdd = () => {
     setEditingId(null);
     setName('');
@@ -42,6 +48,7 @@ export default function Categories() {
     setModalVisible(true);
   };
 
+  // populate form with selected category for editing
   const openEdit = (cat: Category) => {
     setEditingId(cat.id);
     setName(cat.name);
@@ -50,6 +57,7 @@ export default function Categories() {
     setModalVisible(true);
   };
 
+  // decide between insert or update then refresh list
   const handleSave = async () => {
     if (!name) {
       alert('Please enter a category name');
@@ -64,16 +72,18 @@ export default function Categories() {
     loadCategories();
   };
 
+  // show confirm alert before deleting category
   const handleDelete = async (id: number) => {
-  Alert.alert('Delete Category', 'Are you sure?', [
-    { text: 'Cancel', style: 'cancel' },
-    { text: 'Delete', style: 'destructive', onPress: async () => {
-      await db.delete(categoriesTable).where(eq(categoriesTable.id, id));
-      loadCategories();
-    }}
-  ]);
-};
+    Alert.alert('Delete Category', 'Are you sure?', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Delete', style: 'destructive', onPress: async () => {
+        await db.delete(categoriesTable).where(eq(categoriesTable.id, id));
+        loadCategories();
+      }}
+    ]);
+  };
 
+  // main layout showing list and add button
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <Text style={[styles.header, { color: colors.text }]}>Categories</Text>
@@ -84,6 +94,7 @@ export default function Categories() {
         <FlatList
           data={categories}
           keyExtractor={(item) => item.id.toString()}
+          // render each category with edit/delete actions
           renderItem={({ item }) => (
             <View style={[styles.card, { borderBottomColor: colors.border }]}>
               <View style={styles.cardLeft}>
@@ -111,8 +122,11 @@ export default function Categories() {
       <Modal visible={modalVisible} animationType="slide" presentationStyle="pageSheet">
         <ScrollView style={[styles.modal, { backgroundColor: colors.background }]}>
           <Text style={[styles.modalTitle, { color: colors.text }]}>{editingId ? 'Edit Category' : 'Add Category'}</Text>
+
+          {/* input for category name */}
           <FormField label="Name" value={name} onChangeText={setName} placeholder="e.g. Sightseeing" />
 
+          {/* colour picker row */}
           <Text style={[styles.label, { color: colors.text }]}>Colour</Text>
           <View style={styles.colourRow}>
             {COLOURS.map((c) => (
@@ -120,6 +134,7 @@ export default function Categories() {
             ))}
           </View>
 
+          {/* icon picker grid */}
           <Text style={[styles.label, { color: colors.text }]}>Icon</Text>
           <View style={styles.iconRow}>
             {ICONS.map((i) => (
@@ -132,6 +147,7 @@ export default function Categories() {
           <TouchableOpacity style={[styles.saveButton, { backgroundColor: colors.primary }]} onPress={handleSave}>
             <Text style={[styles.saveButtonText, { color: colors.background }]}>Save</Text>
           </TouchableOpacity>
+
           <TouchableOpacity style={styles.cancelButton} onPress={() => setModalVisible(false)}>
             <Text style={[styles.cancelButtonText, { color: colors.subtext }]}>Cancel</Text>
           </TouchableOpacity>
@@ -141,6 +157,7 @@ export default function Categories() {
   );
 }
 
+// styles for list layout, cards and modal inputs
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff', padding: 16, paddingTop: 60 },
   header: { fontSize: 24, fontWeight: '600', color: '#000', marginBottom: 20 },

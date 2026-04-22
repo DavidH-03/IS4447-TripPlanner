@@ -1,3 +1,4 @@
+import DatePicker from '@/components/ui/date-picker';
 import FormField from '@/components/ui/form-field';
 import { useTheme } from '@/context/theme-context';
 import { db } from '@/db/client';
@@ -7,6 +8,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
+// category type used for dropdown selection
 type Category = {
   id: number;
   name: string;
@@ -14,6 +16,7 @@ type Category = {
   icon: string;
 };
 
+// screen for editing an existing activity
 export default function EditActivity() {
   const router = useRouter();
   const { id, tripId } = useLocalSearchParams();
@@ -25,6 +28,7 @@ export default function EditActivity() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
 
+  // load categories and existing activity data
   useEffect(() => {
     const load = async () => {
       const cats = await db.select().from(categoriesTable);
@@ -42,6 +46,7 @@ export default function EditActivity() {
     void load();
   }, [id]);
 
+  // update activity in db with new values
   const handleSave = async () => {
     if (!name || !date || !duration || !selectedCategory) {
       alert('Please fill in all required fields');
@@ -57,10 +62,11 @@ export default function EditActivity() {
     router.back();
   };
 
+  // form layout for editing activity details
   return (
     <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
       <FormField label="Activity Name" value={name} onChangeText={setName} placeholder="e.g. Eiffel Tower visit" />
-      <FormField label="Date" value={date} onChangeText={setDate} placeholder="YYYY-MM-DD" />
+      <DatePicker label="Date" value={date} onChange={setDate} />
       <FormField label="Duration (hours)" value={duration} onChangeText={setDuration} placeholder="e.g. 2.5" />
 
       <Text style={[styles.label, { color: colors.text }]}>Category</Text>
@@ -91,6 +97,7 @@ export default function EditActivity() {
   );
 }
 
+// basic styles for form and categories
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff', padding: 16 },
   label: { fontSize: 14, fontWeight: '600', color: '#000', marginBottom: 8 },

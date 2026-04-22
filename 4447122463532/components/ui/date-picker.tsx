@@ -1,4 +1,5 @@
 import { useTheme } from '@/context/theme-context';
+import RNDateTimePicker from '@react-native-community/datetimepicker';
 import { useState } from 'react';
 import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
@@ -40,7 +41,7 @@ export default function DatePicker({ label, value, onChange }: Props) {
         </Text>
       </TouchableOpacity>
       {show && (
-        <DateTimePicker
+        <RNDateTimePicker
           value={date}
           mode="date"
           display="default"

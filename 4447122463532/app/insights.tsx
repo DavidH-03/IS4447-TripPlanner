@@ -20,8 +20,7 @@ const SCREEN_WIDTH = Dimensions.get('window').width - 32;
 export default function Insights() {
   const { colors } = useTheme();
   const [stats, setStats] = useState<CategoryStat[]>([]);
-  const [period, setPeriod] = useState<'weekly' | 'monthly' | 'all'>('weekly');
-  const [totalHours, setTotalHours] = useState(0);
+  const [period, setPeriod] = useState<'daily' | 'weekly' | 'monthly' | 'all'>('weekly');  const [totalHours, setTotalHours] = useState(0);
   const [totalActivities, setTotalActivities] = useState(0);
   const [streak, setStreak] = useState(0);
 
@@ -36,6 +35,7 @@ export default function Insights() {
     const startOfWeek = new Date(now);
     startOfWeek.setDate(now.getDate() - now.getDay());
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
     const allActivities = await db.select().from(activitiesTable);
     const allCategories = await db.select().from(categoriesTable);
@@ -43,10 +43,13 @@ export default function Insights() {
     const filtered = allActivities.filter(a => {
       if (period === 'all') return true;
       const actDate = new Date(a.date);
+      if (period === 'daily') return actDate >= startOfDay && actDate <= now;
       if (period === 'weekly') return actDate >= startOfWeek && actDate <= now;
       if (period === 'monthly') return actDate >= startOfMonth && actDate <= now;
       return true;
     });
+
+    
 
     const statsMap: Record<number, CategoryStat> = {};
     for (const cat of allCategories) {
@@ -109,14 +112,14 @@ const calculateStreak = async () => {
       <Text style={[styles.header, { color: colors.text }]}>Insights</Text>
 
       <View style={styles.periodRow}>
-        {(['weekly', 'monthly', 'all'] as const).map(p => (
+        {(['daily', 'weekly', 'monthly', 'all'] as const).map(p => (
           <TouchableOpacity
             key={p}
             style={[styles.periodChip, { borderColor: colors.border }, period === p && styles.periodChipSelected]}
             onPress={() => setPeriod(p)}
           >
             <Text style={[styles.periodChipText, { color: colors.text }, period === p && styles.periodChipTextSelected]}>
-              {p === 'weekly' ? 'This Week' : p === 'monthly' ? 'This Month' : 'All Time'}
+              {p === 'daily' ? 'Today' : p === 'weekly' ? 'This Week' : p === 'monthly' ? 'This Month' : 'All Time'}
             </Text>
           </TouchableOpacity>
         ))}

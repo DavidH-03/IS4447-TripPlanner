@@ -8,12 +8,13 @@ import { useContext, useEffect } from 'react';
 import { Alert, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { TripContext } from './_layout';
 
-
+// main home screen showing trips and navigation
 export default function Index() {
   const router = useRouter();
   const context = useContext(TripContext);
   const { colors } = useTheme();
 
+  // check if user is logged in, redirect if not
   useEffect(() => {
     const checkAuth = async () => {
       const stored = await AsyncStorage.getItem('user');
@@ -27,52 +28,66 @@ export default function Index() {
   if (!context) return null;
   const { trips, setTrips } = context;
 
+  // delete trip then refresh list from db
   const handleDelete = async (id: number) => {
-  Alert.alert('Delete Trip', 'Are you sure you want to delete this trip?', [
-    { text: 'Cancel', style: 'cancel' },
-    {
-      text: 'Delete', style: 'destructive', onPress: async () => {
-        await db.delete(tripsTable).where(eq(tripsTable.id, id));
-        const rows = await db.select().from(tripsTable);
-        setTrips(rows);
+    Alert.alert('Delete Trip', 'Are you sure you want to delete this trip?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete', style: 'destructive', onPress: async () => {
+          await db.delete(tripsTable).where(eq(tripsTable.id, id));
+          const rows = await db.select().from(tripsTable);
+          setTrips(rows);
+        }
       }
-    }
-  ]);
-};
+    ]);
+  };
 
+  // layout with header, nav shortcuts and trip list
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-   <View style={styles.navRow}>
-  <TouchableOpacity style={[styles.navButton, { backgroundColor: colors.card }]} onPress={() => router.push('/insights')}>
-    <Text style={styles.navIcon}>📊</Text>
-    <Text style={[styles.navLabel, { color: colors.text }]}>Insights</Text>
-  </TouchableOpacity>
-  <TouchableOpacity style={[styles.navButton, { backgroundColor: colors.card }]} onPress={() => router.push('/targets')}>
-    <Text style={styles.navIcon}>🎯</Text>
-    <Text style={[styles.navLabel, { color: colors.text }]}>Targets</Text>
-  </TouchableOpacity>
-  <TouchableOpacity style={[styles.navButton, { backgroundColor: colors.card }]} onPress={() => router.push('/categories')}>
-    <Text style={styles.navIcon}>🏷️</Text>
-    <Text style={[styles.navLabel, { color: colors.text }]}>Categories</Text>
-  </TouchableOpacity>
-  <TouchableOpacity style={[styles.navButton, { backgroundColor: colors.card }]} onPress={() => router.push('/settings')}>
-    <Text style={styles.navIcon}>⚙️</Text>
-    <Text style={[styles.navLabel, { color: colors.text }]}>Settings</Text>
-  </TouchableOpacity>
-</View>
+      <View style={styles.brandRow}>
+        <Text style={[styles.brandIcon]}>✈️</Text>
+        <View>
+          <Text style={[styles.brandName, { color: colors.text }]}>Tripit</Text>
+          <Text style={[styles.brandSub, { color: colors.subtext }]}>Your travel companion</Text>
+        </View>
+      </View>
+
+      <View style={styles.navRow}>
+        <TouchableOpacity style={[styles.navButton, { backgroundColor: colors.card }]} onPress={() => router.push('/insights')}>
+          <Text style={styles.navIcon}>📊</Text>
+          <Text style={[styles.navLabel, { color: colors.text }]}>Insights</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.navButton, { backgroundColor: colors.card }]} onPress={() => router.push('/targets')}>
+          <Text style={styles.navIcon}>🎯</Text>
+          <Text style={[styles.navLabel, { color: colors.text }]}>Targets</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.navButton, { backgroundColor: colors.card }]} onPress={() => router.push('/categories')}>
+          <Text style={styles.navIcon}>🏷️</Text>
+          <Text style={[styles.navLabel, { color: colors.text }]}>Categories</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.navButton, { backgroundColor: colors.card }]} onPress={() => router.push('/settings')}>
+          <Text style={styles.navIcon}>⚙️</Text>
+          <Text style={[styles.navLabel, { color: colors.text }]}>Settings</Text>
+        </TouchableOpacity>
+      </View>
+
       {trips.length === 0 ? (
-        <Text style={styles.empty}>No trips yet. Add your first trip!</Text>
+        <Text style={[styles.empty, { color: colors.subtext }]}>No trips yet. Add your first trip!</Text>
       ) : (
         <FlatList
           data={trips}
           keyExtractor={(item) => item.id.toString()}
+          // render each trip with edit and delete actions
           renderItem={({ item }) => (
             <TouchableOpacity onPress={() => router.push(`/trip-detail?id=${item.id}`)}>
               <View style={[styles.card, { borderBottomColor: colors.border }]}>
                 <View style={styles.cardContent}>
                   <Text style={[styles.tripName, { color: colors.text }]}>{item.name}</Text>
                   <Text style={[styles.tripDestination, { color: colors.subtext }]}>{item.destination}</Text>
-                  <Text style={styles.tripDates}>{item.startDate} → {item.endDate}</Text>
+                  <Text style={[styles.tripDates, { color: colors.subtext }]}>
+                    {new Date(item.startDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} → {new Date(item.endDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                  </Text>
                 </View>
                 <View style={styles.cardActions}>
                   <TouchableOpacity onPress={() => router.push(`/edit-trip?id=${item.id}`)}>
@@ -87,6 +102,7 @@ export default function Index() {
           )}
         />
       )}
+
       <TouchableOpacity style={[styles.addButton, { backgroundColor: colors.primary }]} onPress={() => router.push('/add-trip')}>
         <Text style={[styles.addButtonText, { color: colors.background }]}>+ Add Trip</Text>
       </TouchableOpacity>
@@ -94,7 +110,12 @@ export default function Index() {
   );
 }
 
+// styles for layout, cards and navigation buttons
 const styles = StyleSheet.create({
+  brandRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 24 },
+  brandIcon: { fontSize: 32 },
+  brandName: { fontSize: 22, fontWeight: '700' },
+  brandSub: { fontSize: 13, marginTop: 2 },
   container: {
     flex: 1,
     backgroundColor: '#fff',

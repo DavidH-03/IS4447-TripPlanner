@@ -31,7 +31,7 @@ export default function Login() {
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: colors.background }]} contentContainerStyle={styles.content}>
-      <Text style={[styles.title, { color: colors.text }]}>TripTracker</Text>
+      <Text style={[styles.title, { color: colors.text }]}>Tripit</Text>
       <Text style={[styles.subtitle, { color: colors.subtext }]}>Sign in to continue</Text>
 
       <FormField label="Email" value={email} onChangeText={setEmail} placeholder="your@email.com" />

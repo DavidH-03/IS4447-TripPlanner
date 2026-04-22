@@ -1,3 +1,4 @@
+import DatePicker from '@/components/ui/date-picker';
 import FormField from '@/components/ui/form-field';
 import { useTheme } from '@/context/theme-context';
 import { db } from '@/db/client';
@@ -57,7 +58,7 @@ export default function AddActivity() {
   return (
     <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
       <FormField label="Activity Name" value={name} onChangeText={setName} placeholder="e.g. Eiffel Tower visit" />
-      <FormField label="Date" value={date} onChangeText={setDate} placeholder="YYYY-MM-DD" />
+      <DatePicker label="Date" value={date} onChange={setDate} />
       <FormField label="Duration (hours)" value={duration} onChangeText={setDuration} placeholder="e.g. 2.5" />
 
       <Text style={[styles.label, { color: colors.text }]}>Category</Text>

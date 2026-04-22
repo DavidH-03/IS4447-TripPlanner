@@ -9,6 +9,7 @@ import { useContext, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity } from 'react-native';
 import { TripContext } from './_layout';
 
+// screen for creating a new trip
 export default function AddTrip() {
   const router = useRouter();
   const context = useContext(TripContext);
@@ -19,6 +20,7 @@ export default function AddTrip() {
   const [endDate, setEndDate] = useState('');
   const [notes, setNotes] = useState('');
 
+  // validate input, attach user id, then insert trip into db
   const handleSave = async () => {
     if (!name || !destination || !startDate || !endDate) {
       alert('Please fill in all required fields');
@@ -40,6 +42,7 @@ export default function AddTrip() {
     router.back();
   };
 
+  // main form layout for adding trip details
   return (
     <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
       <FormField label="Trip Name" value={name} onChangeText={setName} placeholder="e.g. Paris Summer" />
@@ -59,6 +62,7 @@ export default function AddTrip() {
   );
 }
 
+// basic styles for form layout and buttons
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff', padding: 16, paddingTop: 16 },
   saveButton: { backgroundColor: '#000', padding: 14, borderRadius: 8, alignItems: 'center', marginTop: 8 },

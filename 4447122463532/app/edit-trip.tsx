@@ -9,6 +9,7 @@ import { useContext, useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity } from 'react-native';
 import { TripContext } from './_layout';
 
+// screen for editing an existing trip
 export default function EditTrip() {
   const router = useRouter();
   const { id } = useLocalSearchParams();
@@ -20,6 +21,7 @@ export default function EditTrip() {
   const [endDate, setEndDate] = useState('');
   const [notes, setNotes] = useState('');
 
+  // load trip data from db and prefill form
   useEffect(() => {
     const loadTrip = async () => {
       const rows = await db.select().from(tripsTable).where(eq(tripsTable.id, Number(id)));
@@ -35,6 +37,7 @@ export default function EditTrip() {
     void loadTrip();
   }, [id]);
 
+  // update trip and refresh context state
   const handleSave = async () => {
     if (!name || !destination || !startDate || !endDate) {
       alert('Please fill in all required fields');
@@ -49,6 +52,7 @@ export default function EditTrip() {
     router.back();
   };
 
+  // form layout for editing trip details
   return (
     <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
       <FormField label="Trip Name" value={name} onChangeText={setName} placeholder="e.g. Paris Summer" />
@@ -68,6 +72,7 @@ export default function EditTrip() {
   );
 }
 
+// styles for form and buttons
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff', padding: 16 },
   saveButton: { backgroundColor: '#000', padding: 14, borderRadius: 8, alignItems: 'center', marginTop: 8 },
