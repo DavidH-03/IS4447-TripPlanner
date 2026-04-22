@@ -1,3 +1,4 @@
+import DatePicker from '@/components/ui/date-picker';
 import FormField from '@/components/ui/form-field';
 import { useTheme } from '@/context/theme-context';
 import { db } from '@/db/client';
@@ -43,8 +44,8 @@ export default function AddTrip() {
     <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
       <FormField label="Trip Name" value={name} onChangeText={setName} placeholder="e.g. Paris Summer" />
       <FormField label="Destination" value={destination} onChangeText={setDestination} placeholder="e.g. Paris, France" />
-      <FormField label="Start Date" value={startDate} onChangeText={setStartDate} placeholder="YYYY-MM-DD" />
-      <FormField label="End Date" value={endDate} onChangeText={setEndDate} placeholder="YYYY-MM-DD" />
+      <DatePicker label="Start Date" value={startDate} onChange={setStartDate} />
+      <DatePicker label="End Date" value={endDate} onChange={setEndDate} />
       <FormField label="Notes (optional)" value={notes} onChangeText={setNotes} placeholder="Any notes..." multiline />
 
       <TouchableOpacity style={[styles.saveButton, { backgroundColor: colors.primary }]} onPress={handleSave}>

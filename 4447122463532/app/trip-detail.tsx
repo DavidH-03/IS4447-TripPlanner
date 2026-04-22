@@ -42,6 +42,10 @@ export default function TripDetail() {
   const [toDate, setToDate] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const { colors } = useTheme();
+  const formatDate = (dateStr: string) => {
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+};
 
   useEffect(() => {
     const load = async () => {
@@ -69,15 +73,17 @@ export default function TripDetail() {
     return matchesSearch && matchesCategory && matchesFrom && matchesTo;
   });
 
-  if (!trip) return <View style={[styles.container, { backgroundColor: colors.background }]}><Text style={{ color: colors.text }}>Loading...</Text></View>;
-
+if (!trip) return (
+  <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <Text style={{ color: colors.text }}>Loading...</Text>
+  </View>
+);
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <Text style={[styles.tripName, { color: colors.text }]}>{trip.name}</Text>
       <Text style={[styles.destination, { color: colors.subtext }]}>{trip.destination}</Text>
-      <Text style={[styles.dates, { color: colors.subtext }]}>{trip.startDate} → {trip.endDate}</Text>
+      <Text style={[styles.dates, { color: colors.subtext }]}>{formatDate(trip.startDate)} - {formatDate(trip.endDate)}</Text>
       {trip.notes ? <Text style={[styles.notes, { color: colors.subtext }]}>{trip.notes}</Text> : null}
-
       <Text style={[styles.sectionHeader, { color: colors.text }]}>Activities</Text>
 
       <TextInput
@@ -138,9 +144,10 @@ export default function TripDetail() {
           keyExtractor={(item) => item.id.toString()}
           renderItem={({ item }) => (
             <View style={[styles.activityCard, { borderBottomColor: colors.border }]}>
+              <View style={[styles.categoryDot, { backgroundColor: categories.find(c => c.id === item.categoryId)?.colour || colors.border }]} />
               <View style={styles.activityContent}>
                 <Text style={[styles.activityName, { color: colors.text }]}>{item.name}</Text>
-                <Text style={[styles.activityMeta, { color: colors.subtext }]}>{item.date} · {item.duration}h</Text>
+                <Text style={[styles.activityMeta, { color: colors.subtext }]}>{formatDate(item.date)} · {item.duration}h</Text>
                 {item.notes ? <Text style={[styles.activityNotes, { color: colors.subtext }]}>{item.notes}</Text> : null}
               </View>
               <View style={styles.activityActions}>
@@ -165,13 +172,12 @@ export default function TripDetail() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff', padding: 16, paddingTop: 16 },
-  tripName: { fontSize: 22, fontWeight: '700', color: '#000' },
-  destination: { fontSize: 15, color: '#666', marginTop: 4 },
-  dates: { fontSize: 13, color: '#999', marginTop: 4 },
-  notes: { fontSize: 13, color: '#666', marginTop: 8 },
-  sectionHeader: { fontSize: 18, fontWeight: '600', color: '#000', marginTop: 24, marginBottom: 8 },
-  searchInput: { borderWidth: 1, borderColor: '#ddd', borderRadius: 8, padding: 10, fontSize: 14, marginBottom: 8 },
-  filterToggle: { color: '#666', fontSize: 13, marginBottom: 8 },
+  tripName: { fontSize: 26, fontWeight: '700', color: '#000', marginBottom: 4 },
+  destination: { fontSize: 18, color: '#666' },
+  dates: { fontSize: 15, color: '#999', marginTop: 2 },
+  notes: { fontSize: 15, color: '#666', marginTop: 6, fontStyle: 'italic' },
+  sectionHeader: { fontSize: 16, fontWeight: '700', color: '#000', marginTop: 20, marginBottom: 10, textTransform: 'uppercase', letterSpacing: 0.8 },
+  searchInput: { borderWidth: 1, borderColor: '#ddd', borderRadius: 20, padding: 10, paddingHorizontal: 16, fontSize: 14, marginBottom: 8 },  filterToggle: { color: '#666', fontSize: 13, marginBottom: 8 },
   filterBox: { marginBottom: 12 },
   dateRow: { flexDirection: 'row', gap: 8, marginBottom: 8 },
   dateInput: { flex: 1, borderWidth: 1, borderColor: '#ddd', borderRadius: 8, padding: 8, fontSize: 12 },
@@ -191,4 +197,5 @@ const styles = StyleSheet.create({
   deleteText: { color: '#ff3b30', fontSize: 14, fontWeight: '600' },
   addButton: { backgroundColor: '#000', padding: 14, borderRadius: 8, alignItems: 'center', marginTop: 16 },
   addButtonText: { color: '#fff', fontSize: 15, fontWeight: '600' },
+  categoryDot: { width: 8, height: 8, borderRadius: 4, marginRight: 10, marginTop: 4 },
 });

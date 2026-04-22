@@ -1,4 +1,6 @@
+import DatePicker from '@/components/ui/date-picker';
 import FormField from '@/components/ui/form-field';
+import { useTheme } from '@/context/theme-context';
 import { db } from '@/db/client';
 import { trips as tripsTable } from '@/db/schema';
 import { eq } from 'drizzle-orm';
@@ -11,6 +13,7 @@ export default function EditTrip() {
   const router = useRouter();
   const { id } = useLocalSearchParams();
   const context = useContext(TripContext);
+  const { colors } = useTheme();
   const [name, setName] = useState('');
   const [destination, setDestination] = useState('');
   const [startDate, setStartDate] = useState('');
@@ -38,10 +41,7 @@ export default function EditTrip() {
       return;
     }
     await db.update(tripsTable).set({
-      name,
-      destination,
-      startDate,
-      endDate,
+      name, destination, startDate, endDate,
       notes: notes || null,
     }).where(eq(tripsTable.id, Number(id)));
     const rows = await db.select().from(tripsTable);
@@ -50,49 +50,28 @@ export default function EditTrip() {
   };
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
       <FormField label="Trip Name" value={name} onChangeText={setName} placeholder="e.g. Paris Summer" />
       <FormField label="Destination" value={destination} onChangeText={setDestination} placeholder="e.g. Paris, France" />
-      <FormField label="Start Date" value={startDate} onChangeText={setStartDate} placeholder="YYYY-MM-DD" />
-      <FormField label="End Date" value={endDate} onChangeText={setEndDate} placeholder="YYYY-MM-DD" />
+      <DatePicker label="Start Date" value={startDate} onChange={setStartDate} />
+      <DatePicker label="End Date" value={endDate} onChange={setEndDate} />
       <FormField label="Notes (optional)" value={notes} onChangeText={setNotes} placeholder="Any notes..." multiline />
 
-      <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-        <Text style={styles.saveButtonText}>Save Changes</Text>
+      <TouchableOpacity style={[styles.saveButton, { backgroundColor: colors.primary }]} onPress={handleSave}>
+        <Text style={[styles.saveButtonText, { color: colors.background }]}>Save Changes</Text>
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.cancelButton} onPress={() => router.back()}>
-        <Text style={styles.cancelButtonText}>Cancel</Text>
+        <Text style={[styles.cancelButtonText, { color: colors.subtext }]}>Cancel</Text>
       </TouchableOpacity>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    padding: 16,
-  },
-  saveButton: {
-    backgroundColor: '#000',
-    padding: 14,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  saveButtonText: {
-    color: '#fff',
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  cancelButton: {
-    padding: 14,
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  cancelButtonText: {
-    color: '#666',
-    fontSize: 15,
-  },
+  container: { flex: 1, backgroundColor: '#fff', padding: 16 },
+  saveButton: { backgroundColor: '#000', padding: 14, borderRadius: 8, alignItems: 'center', marginTop: 8 },
+  saveButtonText: { color: '#fff', fontSize: 15, fontWeight: '600' },
+  cancelButton: { padding: 14, alignItems: 'center', marginTop: 8 },
+  cancelButtonText: { color: '#666', fontSize: 15 },
 });

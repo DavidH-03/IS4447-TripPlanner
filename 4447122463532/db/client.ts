@@ -2,7 +2,7 @@ import { drizzle } from 'drizzle-orm/expo-sqlite';
 import { openDatabaseSync } from 'expo-sqlite';
 import * as schema from './schema';
 
-const sqlite = openDatabaseSync('triptracker6.db', { enableChangeListener: true });
+const sqlite = openDatabaseSync('triptracker7.db', { enableChangeListener: true });
 sqlite.execSync(`
   CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,

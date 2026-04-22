@@ -5,8 +5,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { eq } from 'drizzle-orm';
 import { useRouter } from 'expo-router';
 import { useContext, useEffect } from 'react';
-import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { TripContext } from './_layout';
+
 
 export default function Index() {
   const router = useRouter();
@@ -27,26 +28,38 @@ export default function Index() {
   const { trips, setTrips } = context;
 
   const handleDelete = async (id: number) => {
-    await db.delete(tripsTable).where(eq(tripsTable.id, id));
-    const rows = await db.select().from(tripsTable);
-    setTrips(rows);
-  };
+  Alert.alert('Delete Trip', 'Are you sure you want to delete this trip?', [
+    { text: 'Cancel', style: 'cancel' },
+    {
+      text: 'Delete', style: 'destructive', onPress: async () => {
+        await db.delete(tripsTable).where(eq(tripsTable.id, id));
+        const rows = await db.select().from(tripsTable);
+        setTrips(rows);
+      }
+    }
+  ]);
+};
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <Text style={[styles.header, { color: colors.text }]}>My Trips</Text>
-      <TouchableOpacity onPress={() => router.push('/categories')}>
-        <Text style={styles.categoriesLink}>Manage Categories</Text>
-      </TouchableOpacity>
-      <TouchableOpacity onPress={() => router.push('/settings')}>
-  <Text style={styles.categoriesLink}>Settings</Text>
-</TouchableOpacity> 
-<TouchableOpacity onPress={() => router.push('/targets')}>
-  <Text style={styles.categoriesLink}>Targets</Text>
-</TouchableOpacity>
-<TouchableOpacity onPress={() => router.push('/insights')}>
-  <Text style={styles.categoriesLink}>Insights</Text>
-</TouchableOpacity>
+   <View style={styles.navRow}>
+  <TouchableOpacity style={[styles.navButton, { backgroundColor: colors.card }]} onPress={() => router.push('/insights')}>
+    <Text style={styles.navIcon}>📊</Text>
+    <Text style={[styles.navLabel, { color: colors.text }]}>Insights</Text>
+  </TouchableOpacity>
+  <TouchableOpacity style={[styles.navButton, { backgroundColor: colors.card }]} onPress={() => router.push('/targets')}>
+    <Text style={styles.navIcon}>🎯</Text>
+    <Text style={[styles.navLabel, { color: colors.text }]}>Targets</Text>
+  </TouchableOpacity>
+  <TouchableOpacity style={[styles.navButton, { backgroundColor: colors.card }]} onPress={() => router.push('/categories')}>
+    <Text style={styles.navIcon}>🏷️</Text>
+    <Text style={[styles.navLabel, { color: colors.text }]}>Categories</Text>
+  </TouchableOpacity>
+  <TouchableOpacity style={[styles.navButton, { backgroundColor: colors.card }]} onPress={() => router.push('/settings')}>
+    <Text style={styles.navIcon}>⚙️</Text>
+    <Text style={[styles.navLabel, { color: colors.text }]}>Settings</Text>
+  </TouchableOpacity>
+</View>
       {trips.length === 0 ? (
         <Text style={styles.empty}>No trips yet. Add your first trip!</Text>
       ) : (
@@ -94,11 +107,10 @@ const styles = StyleSheet.create({
     color: '#000',
     marginBottom: 4,
   },
-  categoriesLink: {
-    color: '#666',
-    fontSize: 14,
-    marginBottom: 16,
-  },
+  navRow: { flexDirection: 'row', gap: 8, marginBottom: 20 },
+  navButton: { flex: 1, borderRadius: 10, padding: 10, alignItems: 'center' },
+  navIcon: { fontSize: 20 },
+  navLabel: { fontSize: 11, marginTop: 4 },
   empty: {
     color: '#999',
     fontSize: 15,

@@ -10,25 +10,25 @@ type ThemeContextType = {
 };
 
 export const lightColors = {
-  background: '#ffffff',
-  card: '#2c2c2e',
-  text: '#000000',
-  subtext: '#666666',
-  border: '#3c3c3e',
-  primary: '#000000',
-  danger: '#ff3b30',
-  success: '#34c759',
+  background: '#FAFAFA',
+  card: '#FFFFFF',
+  text: '#1A1A2E',
+  subtext: '#6B7280',
+  border: '#E5E7EB',
+  primary: '#F4845F',
+  danger: '#EF4444',
+  success: '#10B981',
 };
 
 export const darkColors = {
-  background: '#000000',
-  card: '#1c1c1e',
-  text: '#ffffff',
-  subtext: '#999999',
-  border: '#2c2c2e',
-  primary: '#ffffff',
-  danger: '#ff453a',
-  success: '#30d158',
+  background: '#1A1A2E',
+  card: '#2D2D44',
+  text: '#FAFAFA',
+  subtext: '#9CA3AF',
+  border: '#3D3D5C',
+  primary: '#F4845F',
+  danger: '#EF4444',
+  success: '#10B981',
 };
 
 export const ThemeContext = createContext<ThemeContextType | null>(null);
