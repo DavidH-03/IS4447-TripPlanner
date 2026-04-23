@@ -3,8 +3,8 @@ import { useTheme } from '@/context/theme-context';
 import { db } from '@/db/client';
 import { activities as activitiesTable, categories as categoriesTable, trips as tripsTable } from '@/db/schema';
 import { eq } from 'drizzle-orm';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import { useCallback, useState } from 'react';
 import { Alert, FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 // activity type used for list rendering
@@ -96,22 +96,22 @@ export default function TripDetail() {
   };
 
   // load trip, activities and categories on mount
-  useEffect(() => {
-    const load = async () => {
-      const tripRows = await db.select().from(tripsTable).where(eq(tripsTable.id, Number(id)));
-      if (tripRows.length > 0) {
-        setTrip(tripRows[0]);
-        await fetchCountryInfo(tripRows[0].destination);
-      }
-
-      const activityRows = await db.select().from(activitiesTable).where(eq(activitiesTable.tripId, Number(id)));
-      setActivities(activityRows);
-
-      const catRows = await db.select().from(categoriesTable);
-      setCategories(catRows);
-    };
-    void load();
-  }, [id]);
+  useFocusEffect(
+    useCallback(() => {
+      const load = async () => {
+        const tripRows = await db.select().from(tripsTable).where(eq(tripsTable.id, Number(id)));
+        if (tripRows.length > 0) {
+          setTrip(tripRows[0]);
+          await fetchCountryInfo(tripRows[0].destination);
+        }
+        const activityRows = await db.select().from(activitiesTable).where(eq(activitiesTable.tripId, Number(id)));
+        setActivities(activityRows);
+        const catRows = await db.select().from(categoriesTable);
+        setCategories(catRows);
+      };
+      void load();
+    }, [id])
+  );
 
   // confirm and delete activity then refresh list
   const handleDeleteActivity = async (activityId: number) => {

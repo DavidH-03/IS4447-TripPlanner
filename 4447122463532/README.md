@@ -1,50 +1,63 @@
-# Welcome to your Expo app 👋
+Tripit - IS4447 Trip Planner (Option B)
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Student Number: 122463532
 
-## Get started
+GitHub Repository: https://github.com/DavidH-03/IS4447-TripPlanner
 
-1. Install dependencies
+Expo: Run locally using Expo Go by following the setup instructions below.
 
-   ```bash
-   npm install
-   ```
+iOS link: https://expo.dev/preview/update?message=Final+submission&updateRuntimeVersion=1.0.0&createdAt=2026-04-23T18%3A35%3A32.590Z&slug=exp&projectId=371dab99-ffca-41c2-a9ed-8b368bd96a33&group=c4681b74-3e8b-4e57-a70d-b1034dbbea27
 
-2. Start the app
+android link: https://expo.dev/preview/update?message=Final+submission&updateRuntimeVersion=1.0.0&createdAt=2026-04-23T18%3A34%3A39.163Z&slug=exp&projectId=371dab99-ffca-41c2-a9ed-8b368bd96a33&group=da521682-c447-42a0-adc2-23f8eb5b8582
 
-   ```bash
-   npx expo start
-   ```
+About
+Tripit is a mobile trip planning app built with React Native and Expo. Users can create and manage trips, log activities, set targets, view insights and export their data.
 
-In the output, you'll find options to open the app in a
+Built for IS4447 Mobile Application Development - Option B: Holiday / Trip Planner.
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+Tech Stack
+- React Native with Expo
+- Expo Router (file-based navigation)
+- Drizzle ORM with SQLite
+- TypeScript
 
-## Get a fresh project
 
-When you're ready, run:
+Setup Instructions
+1. Clone the repository
+2. Install dependencies:
 
 ```bash
-npm run reset-project
+npm install
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+3. Start the development server:
 
-## Learn more
+```bash
+npx expo start
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+4. Scan the QR code with Expo Go on your phone or press a for Android emulator
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
 
-## Join the community
+Demo Login
+Email: johndoe@gmail.com
+Password: password123
 
-Join our community of developers creating universal apps.
+Features
+Core:
+- Create, edit and delete trips and activities
+- Categories with colour and icon
+- Weekly and monthly targets with progress tracking
+- Insights with daily, weekly, monthly and all time views
+- Search and filter activities by text, date and category
+- Local SQLite storage via Drizzle ORM
+- Seed script with sample data
+- User registration, login, logout and delete account
+- Light and dark mode
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Advanced:
+- Dark mode with local persistence
+- CSV export of activities
+- Streak tracking
+- RestCountries API integration showing destination country info

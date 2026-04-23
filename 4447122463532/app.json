@@ -5,7 +5,7 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "4447122463532",
+    "scheme": "app4447122463532",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
@@ -25,6 +25,8 @@
       "output": "static",
       "favicon": "./assets/images/favicon.png"
     },
+    "platforms": ["ios", "android"],
+
     "plugins": [
       "expo-router",
       [
@@ -45,6 +47,19 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "371dab99-ffca-41c2-a9ed-8b368bd96a33"
+      }
+    },
+    "owner": "davidh03",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/371dab99-ffca-41c2-a9ed-8b368bd96a33"
     }
   }
 }
