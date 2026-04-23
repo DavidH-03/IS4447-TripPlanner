@@ -10,10 +10,6 @@ iOS link: https://expo.dev/preview/update?message=Final+submission&updateRuntime
 
 android link: https://expo.dev/preview/update?message=Final+submission&updateRuntimeVersion=1.0.0&createdAt=2026-04-23T18%3A34%3A39.163Z&slug=exp&projectId=371dab99-ffca-41c2-a9ed-8b368bd96a33&group=da521682-c447-42a0-adc2-23f8eb5b8582
 
-About
-Tripit is a mobile trip planning app built with React Native and Expo. Users can create and manage trips, log activities, set targets, view insights and export their data.
-
-Built for IS4447 Mobile Application Development - Option B: Holiday / Trip Planner.
 
 
 Tech Stack
